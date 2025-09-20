@@ -13,7 +13,11 @@ return new class extends Migration
     {
         Schema::create('rooms', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('location_id')
+                ->constrained('locations')
+                ->cascadeOnDelete();
             $table->string('name', length:100);
+            $table->string('qr_code')->unique();
             $table->timestamps();
         });
     }
