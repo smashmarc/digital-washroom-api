@@ -25,10 +25,10 @@ class CreateLogRequest extends FormRequest
 
     // Optionally, automatically attach the authenticated user ID
     // uncomment if needed
-    // public function validated($key = null, $default = null)
-    // {
-    //     $data = parent::validated($key, $default);
-    //     $data['user_id'] = auth()->id(); // attach authenticated user
-    //     return $data;
-    // }
+    public function validated($key = null, $default = null)
+    {
+        $data = parent::validated($key, $default);
+        $data['user_id'] = auth()->id(); // attach authenticated user
+        return $data;
+    }
 }
