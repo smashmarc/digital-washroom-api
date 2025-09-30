@@ -24,7 +24,7 @@ class LogsController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        Gate::authorize('view', Log::class);
+        Gate::authorize('view', new Log());
          $params = $request->only([
             'search',
             'sort_by',

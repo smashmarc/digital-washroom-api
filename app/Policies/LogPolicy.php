@@ -24,7 +24,7 @@ class LogPolicy
 
     public function view(User $user, Log $model): bool
     {
-        return $user->hasPermissionTo(PermissionConstant::LOG_VIEW, Log::class);
+        return $user->hasPermissionTo(PermissionConstant::LOG_VIEW);
     }
 
     public function create(User $user): bool
