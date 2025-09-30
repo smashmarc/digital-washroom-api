@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use App\Models\User;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use App\Http\Resources\UserResource;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use App\Constants\PermissionConstant;
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\UpdateUserRequest;
-use Exception;
+use App\Http\Resources\UserFormOptionsResource;
 
 class UsersController extends Controller
 {
@@ -22,7 +26,9 @@ class UsersController extends Controller
     public function index(Request $request): JsonResponse
     {
 
-        $params = $request->only([
+      Gate::authorize('view', User::class); 
+ 
+      $params = $request->only([
             'search',
             'sort_by',
             'sort_dir',
@@ -34,11 +40,13 @@ class UsersController extends Controller
         $columns = ['name'];
         try {
             $roles = $this->userService->searchPaginatedList($params, $columns);
-            return ApiResponse::paginated(
+            return ApiResponse::success(
                 'User fetched successfully.',
                 $roles,
+                200,
                 UserResource::class
             );
+           
         } catch (Exception $e) {
             return ApiResponse::error('Failed to fetch roles.', 500);
         }
@@ -46,30 +54,39 @@ class UsersController extends Controller
 
     public function store(CreateUserRequest $request): JsonResponse
     {
-
-        try {
+      //simulate unauthorized respnse here
+          //return ApiResponse::error('Unauthorized', 401);
+        try {          
             $user = $this->userService->create($request->validated());
             return ApiResponse::success(
                 'User created successfully.',
-                new UserResource($user)
+                new UserResource($user),
+                201
             );
+           
         } catch (Exception $e) {
             return ApiResponse::error('Something went wrong. please contact your administrator', 500);
         }
     }
 
+  
 
     public function show(User $user): JsonResponse
     {
+        Gate::authorize('view', User::class);
+        $user->load('roles');
         return ApiResponse::success('User fetched successfully', new UserResource($user));
     }
 
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
+        Gate::authorize('update', $user);
         $validated = $request->validated();
 
-        if (isset($validated['password'])) {
+        if (isset($validated['password']) && !empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
+        }else{
+            unset($validated['password']);
         }
 
         try {
@@ -81,6 +98,25 @@ class UsersController extends Controller
             );
         } catch (\Exception $e) {
             return ApiResponse::error('Failed to update user.', 500);
+        }
+    }
+
+    public function getFormOptions()
+    {      
+        Gate::authorize('update', User::class);
+        try {
+           
+           $formOptions = $this->userService->getFormOptions();
+
+            return ApiResponse::success(
+                'Form options fetched.',
+                new UserFormOptionsResource($formOptions)
+            );
+        } catch (\Exception $e) {
+             Log::error(__METHOD__ . $e->getMessage(), [               
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return ApiResponse::error('Failed to fetch Form Options.', 500);
         }
     }
 

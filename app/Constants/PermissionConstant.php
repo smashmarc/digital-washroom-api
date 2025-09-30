@@ -6,48 +6,51 @@ class PermissionConstant
     /**
      * Users Module
      */
-    public const USER_CREATE = 'users.create';
-    public const USER_VIEW   = 'users.view';
-    public const USER_UPDATE = 'users.update';
-    public const USER_DELETE = 'users.delete';
+    public const USER_CREATE = 'user.create';
+    public const USER_VIEW   = 'user.view';
+    public const USER_UPDATE = 'user.update';
+    public const USER_DELETE = 'user.delete';
 
     /**
      * Roles Module
      */
-    public const ROLE_CREATE = 'roles.create';
-    public const ROLE_VIEW   = 'roles.view';
-    public const ROLE_UPDATE = 'roles.update';
-    public const ROLE_DELETE = 'roles.delete';
+    public const ROLE_CREATE = 'role.create';
+    public const ROLE_VIEW   = 'role.view';
+    public const ROLE_UPDATE = 'role.update';
+    public const ROLE_DELETE = 'role.delete';
 
     /**
      * Permissions Module
      */
-    public const PERMISSION_CREATE = 'permissions.create';
-    public const PERMISSION_VIEW   = 'permissions.view';
-    public const PERMISSION_UPDATE = 'permissions.update';
-    public const PERMISSION_DELETE = 'permissions.delete';
+    public const PERMISSION_CREATE = 'permission.create';
+    public const PERMISSION_VIEW   = 'permission.view';
+    public const PERMISSION_UPDATE = 'permission.update';
+    public const PERMISSION_DELETE = 'permission.delete';
 
     /**
      * Rooms Module
      */
-    public const ROOM_CREATE = 'rooms.create';
-    public const ROOM_VIEW   = 'rooms.view';
-    public const ROOM_UPDATE = 'rooms.update';
-    public const ROOM_DELETE = 'rooms.delete';
+    public const ROOM_CREATE = 'room.create';
+    public const ROOM_VIEW   = 'room.view';
+    public const ROOM_UPDATE = 'room.update';
+    public const ROOM_DELETE = 'room.delete';
 
     /**
-     * Campus Module
+     * Location Module
      */
-    public const CAMPUS_CREATE = 'campus.create';
-    public const CAMPUS_VIEW   = 'campus.view';
-    public const CAMPUS_UPDATE = 'campus.update';
-    public const CAMPUS_DELETE = 'campus.delete';
+    public const LOCATION_CREATE = 'location.create';
+    public const LOCATION_VIEW   = 'location.view';
+    public const LOCATION_UPDATE = 'location.update';
+    public const LOCATION_DELETE = 'location.delete';
 
+
+    
     /**
      * Logs Module
      */
     public const LOG_VIEW   = 'logs.view';
-    public const LOG_EXPORT = 'logs.export'; // non-CRUD example
+    public const LOG_EXPORT = 'logs.export';
+    public const LOG_CREATE = 'logs.create';
 
     /**
      * Return all permissions
@@ -80,14 +83,15 @@ class PermissionConstant
             self::ROOM_DELETE,
 
             // Campus
-            self::CAMPUS_CREATE,
-            self::CAMPUS_VIEW,
-            self::CAMPUS_UPDATE,
-            self::CAMPUS_DELETE,
+            self::LOCATION_CREATE,
+            self::LOCATION_VIEW,
+            self::LOCATION_UPDATE,
+            self::LOCATION_DELETE,
 
             // Logs
             self::LOG_VIEW,
             self::LOG_EXPORT,
+            self::LOG_CREATE
         ];
     }
 }

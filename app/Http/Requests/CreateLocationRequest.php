@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Location;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CreateLocationRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        Gate::authorize('create', Location::class);
         return true;
     }
 

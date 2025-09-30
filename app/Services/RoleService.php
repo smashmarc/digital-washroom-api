@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Exception;
+use App\Models\Permission;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
@@ -105,6 +106,19 @@ class RoleService extends BaseService
             ]);
 
             throw new Exception('Error assigning permissions to role.');
+        }
+    }
+
+    public function getFormOptions()
+    {        
+         try {
+           $permissions= Permission::all();          
+           return ['permissions'=>$permissions];        
+        } catch (Exception $e) {               
+            Log::error('Failed to fetch form options ' . $e->getMessage(), [               
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
         }
     }
 }

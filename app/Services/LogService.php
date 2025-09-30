@@ -4,14 +4,13 @@ namespace App\Services;
 
 use App\Models\Role;
 use Exception;
-use App\Models\User;
-use Illuminate\Support\Arr;
+use App\Models\Log as LogModel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class UserService extends BaseService
+class LogService extends BaseService
 {
-    public function __construct(User $model)
+    public function __construct(LogModel $model)
     {
         parent::__construct($model);
     }
@@ -24,34 +23,12 @@ class UserService extends BaseService
         return parent::list($params, $columns);
     }
 
-    public function getFormOptions()
-    {        
-         try {
-           $roles= Role::all();          
-           return ['roles'=>$roles];        
-        } catch (Exception $e) {               
-            Log::error('Failed to fetch form options ' . $e->getMessage(), [               
-                'trace' => $e->getTraceAsString(),
-            ]);
-            throw $e;
-        }
-    }
 
-
-
-    public function create(array $data): User
-    {
-        DB::beginTransaction();
+    public function create(array $data): LogModel
+    {     
         try {
-            $user = User::create($data);
-            // Assign roles if provided
-           if (isset($data['roles'])) {
-                 $user->syncRoles($data['roles']);
-            }
-            DB::commit();
-            return $user;
-        } catch (Exception $e) {
-            DB::rollBack();
+            return LogModel::create($data);        
+        } catch (Exception $e) {          
             Log::error('Failed to create role: ' . $e->getMessage(), [
                 'data' => $data,
                 'trace' => $e->getTraceAsString(),

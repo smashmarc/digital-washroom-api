@@ -2,13 +2,16 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Room;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Foundation\Http\FormRequest;
 
-class StoreRoomRequest extends FormRequest
+class CreateRoomRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        Gate::authorize('create', Room::class);
         return true; // adjust if you add policies
     }
 

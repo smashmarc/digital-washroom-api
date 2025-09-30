@@ -11,6 +11,7 @@ class Log extends Model
         'room_id',
         'user_id',
         'note',
+        'note_code'
     ];
 
     public function room(): BelongsTo

@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Helpers\ApiResponse;
+use Illuminate\Http\Request;
+use App\Http\Resources\AuthResource;
 
 class AuthController extends Controller
 {
@@ -15,10 +16,14 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
 
         if (!$token = auth()->attempt($credentials)) {
-            return ApiResponse::error('Invalid email or password', 401);
+            return ApiResponse::error(
+                'Invalid email or password',
+                401,
+                ['email' => ['These credentials do not match our records.']]
+            );
         }
 
-        return $this->respondWithToken($token, 'Login successful');
+        return $this->respondWithToken($token, 'Login successful', auth()->user());
     }
 
     /**
@@ -36,7 +41,7 @@ class AuthController extends Controller
     {
         auth()->logout();
 
-        return ApiResponse::success('Successfully logged out');
+        return ApiResponse::success('Successfully logged out', null);
     }
 
     /**
@@ -44,18 +49,19 @@ class AuthController extends Controller
      */
     public function refresh()
     {
-        return $this->respondWithToken(auth()->refresh(), 'Token refreshed successfully');
+        return $this->respondWithToken(auth()->refresh(), 'Token refreshed successfully', auth()->user());
     }
 
     /**
      * Format token response consistently.
      */
-    protected function respondWithToken(string $token, string $message = null)
+    protected function respondWithToken(string $token, string $message, $user = null)
     {
-        return ApiResponse::success($message ?? 'Token generated', [
-            'access_token' => $token,
-            'token_type'   => 'bearer',
-            'expires_in'   => auth()->factory()->getTTL() * 60,
-        ]);
+        return ApiResponse::success($message, new AuthResource([
+        'user'         => $user,
+        'access_token' => $token,
+        'token_type'   => 'bearer',
+        'expires_in'   => auth()->factory()->getTTL() * 60, // TTL is in minutes → convert to seconds
+    ]));
     }
 }

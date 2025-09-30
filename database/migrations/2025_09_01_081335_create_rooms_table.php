@@ -17,7 +17,7 @@ return new class extends Migration
                 ->constrained('locations')
                 ->cascadeOnDelete();
             $table->string('name', length:100);
-            $table->string('qr_code')->unique();
+            $table->string('qr_code')->nullable();
             $table->timestamps();
         });
     }

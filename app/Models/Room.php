@@ -22,17 +22,17 @@ class Room extends Model
         return $this->belongsTo(Location::class);
     }
 
-    protected static function boot()
-    {
-        parent::boot();
+    // protected static function boot()
+    // {
+    //     parent::boot();
 
-        static::creating(function ($room) {
-            // If no qr_code is manually set, generate one
-            if (empty($room->qr_code)) {
-                $room->qr_code = self::generateQrCode();
-            }
-        });
-    }
+    //     static::creating(function ($room) {
+    //         // If no qr_code is manually set, generate one
+    //         if (empty($room->qr_code)) {
+    //             $room->qr_code = self::generateQrCode();
+    //         }
+    //     });
+    // }
 
     /**
      * Generate a unique QR code string
@@ -55,6 +55,11 @@ class Room extends Model
     // optional helper to get last cleaned log
     public function lastCleanedLog()
     {
-        return $this->hasOne(Log::class)->latestOfMany();
+        return $this->hasOne(Log::class)
+        ->where('note_code', '!=', 0)
+        ->orderByDesc('id')
+        ->limit(1);
     }
+
+    
 }

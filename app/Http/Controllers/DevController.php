@@ -7,6 +7,7 @@ use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use App\Constants\Role as RoleConstant;
 
 class DevController extends Controller
 {
@@ -37,7 +38,7 @@ class DevController extends Controller
             // assuming you have roles column
         ]);
 
-            $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'api']);
+            $role = Role::firstOrCreate(['name' => RoleConstant::ADMINISTRATOR, 'guard_name' => 'api']);
              $user->assignRole($role);
 
         return ApiResponse::success('Super admin created successfully', $user);

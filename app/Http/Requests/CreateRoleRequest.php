@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Role;
 use App\Helpers\ApiResponse;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
@@ -11,6 +13,7 @@ class CreateRoleRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        Gate::authorize('create', Role::class);
         return true; // adjust if you have policies
     }
 

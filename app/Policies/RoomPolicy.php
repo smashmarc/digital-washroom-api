@@ -4,30 +4,33 @@ namespace App\Policies;
 
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Auth\Access\Response;
 use App\Constants\PermissionConstant;
 use App\Constants\Role as RoleConstant;
 
-class UserPolicy
+class RoomPolicy
 {
 
    public function before(User $user, string $ability): ?bool
-    {      
+    {
+        
         if ($user->hasRole(RoleConstant::ADMINISTRATOR)) {
             return true;
         }
-        return null;
+
+        return null; 
     }
 
     public function view(User $user): bool
     {
-       
-        return $user->hasPermissionTo(PermissionConstant::USER_VIEW);
+        
+        return $user->hasPermissionTo(PermissionConstant::ROOM_VIEW);
     }
 
     public function create(User $user): bool
     {
        
-        return $user->hasPermissionTo(PermissionConstant::USER_CREATE);
+        return $user->hasPermissionTo(PermissionConstant::ROOM_CREATE);
     }
 
     public function update(User $user): bool
@@ -36,11 +39,11 @@ class UserPolicy
         //     return $model->id === $user->id;
         // }   
         //return false;
-        return $user->hasPermissionTo(PermissionConstant::USER_UPDATE);
+        return $user->hasPermissionTo(PermissionConstant::ROOM_UPDATE);
     }
 
-    public function delete(User $user): bool
+    public function delete(User $user, User $model): bool
     {
-        return $user->hasPermissionTo(PermissionConstant::USER_DELETE);
+        return $user->hasPermissionTo(PermissionConstant::ROOM_DELETE);
     }
 }

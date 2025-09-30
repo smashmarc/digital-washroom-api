@@ -2,34 +2,61 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use App\Models\Room;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
+use App\Services\RoomService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use App\Http\Resources\RoomResource;
-use App\Http\Requests\StoreRoomRequest;
+use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\CreateRoomRequest;
 use App\Http\Requests\UpdateRoomRequest;
+use App\Http\Resources\RoomFormOptionsResource;
 
 class RoomsController extends Controller
 {
-    /**
-     * Get a paginated list of rooms with their locations.
-     *
-     * @return JsonResponse
-     */
-    public function index(): JsonResponse
+    protected $roomService;
+    public function __construct(RoomService $roomService)
     {
-        $rooms = Room::with('location')->paginate(10);
-        return ApiResponse::paginated('fetched successfully', $rooms, RoomResource::class);
+        $this->roomService = $roomService;
+    }
+    
+    public function index(Request $request): JsonResponse
+    {
+        Gate::authorize('view', Room::class);
+        $params = $request->only([
+            'search',
+            'sort_by',
+            'sort_dir',
+            'per_page',
+            'with',
+            'columns',
+            'exact'
+        ]);
+        $columns = ['name'];
+        try {
+            $items = $this->roomService->searchPaginatedList($params, $columns);
+            return ApiResponse::success(
+                'Location fetched successfully.',
+                $items,
+                200,
+                RoomResource::class
+            );
+           
+        } catch (Exception $e) {
+            return ApiResponse::error('Failed to fetch rooms.', 500);
+        }
     }
 
     /**
      * Store a newly created room.
      *
-     * @param  StoreRoomRequest  $request
+     * @param  CreateRoomRequest  $request
      * @return JsonResponse
      */
-    public function store(StoreRoomRequest $request): JsonResponse
+    public function store(CreateRoomRequest $request): JsonResponse
     {
         $room = Room::create($request->validated());
         return ApiResponse::success('Room created successfully', new RoomResource($room), 201);
@@ -43,7 +70,8 @@ class RoomsController extends Controller
      */
     public function show(Room $room): JsonResponse
     {
-        $room->load('location');
+         Gate::authorize('view', Room::class);
+        $room->load(['location', 'logs.user']);
 
         return ApiResponse::success('Room fetched successfully', new RoomResource($room));
     }
@@ -74,34 +102,38 @@ class RoomsController extends Controller
     }
 
 
-    public function search(Request $request)
+    public function getFormOptions()
+    {      
+        if (!Gate::any(['create', 'update'], Room::class)){
+             abort(403);
+        }
+        try {
+           
+           $formOptions = $this->roomService->getFormOptions();
+
+            return ApiResponse::success(
+                'Form options fetched.',
+                new RoomFormOptionsResource($formOptions),
+                200
+            );
+        } catch (\Exception $e) {
+             Log::error(__METHOD__ . $e->getMessage(), [               
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return ApiResponse::error('Failed to fetch Form Options.', 500);
+        }
+    }
+    /**
+     * Public Action no need to check authorization
+     * 
+     *
+     * @param Room $room
+     * @return void
+     */
+    public function qrView(Room $room)
     {
-        $query = Room::query();
+         $room->load(['location', 'lastCleanedLog']);
 
-        // Filters
-        if ($request->filled('code')) {
-            $query->where('qr_code', $request->code);
-        }
-
-        if ($request->filled('name')) {
-            $query->where('name', 'like', '%' . $request->name . '%');
-        }
-
-        // Eager load allowed relations
-        $allowedRelations = ['logs.user', 'lastCleanedLog'];
-        $with = array_intersect(
-            explode(',', $request->get('with', '')),
-            $allowedRelations
-        );
-        $query->with($with);
-
-        // Decide single or multiple result
-        if ($request->boolean('is_single')) {
-            $result = $query->firstOrFail();
-            return ApiResponse::success('Room fetched successfully', new RoomResource($result));
-        }
-
-        $result = $query->get();
-        return ApiResponse::success('Rooms fetched successfully', RoomResource::collection($result));
+        return ApiResponse::success('Room fetched successfully', new RoomResource($room));
     }
 }

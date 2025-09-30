@@ -13,7 +13,7 @@ class PermissionSeeder extends Seeder
         foreach (PermissionConstant::all() as $permission) {
             Permission::firstOrCreate(
                 ['name' => $permission, 'guard_name' => 'api'],
-                ['description' => ucfirst(str_replace(['.', '-'], ' ', $permission))],              
+                ['description' => 'can '.ucfirst(str_replace(['.', '-'], ' ', $permission))],              
             );
         }
     }

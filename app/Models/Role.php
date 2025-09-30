@@ -17,7 +17,7 @@ class Role extends SpatieRole
     /**
      * Optional: eager load permissions by default
      */
-    protected $with = ['permissions'];
+    
 
     /**
      * Users relationship (if using standard User model with Spatie)

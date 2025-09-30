@@ -18,6 +18,7 @@ class RoomResource extends JsonResource
             'last_cleaned' => $this->whenLoaded('lastCleanedLog', function () {
                 return optional($this->lastCleanedLog)->created_at;
             }),
+            'location'=>new LocationResource($this->whenLoaded('location'))
         ];
     }
 }

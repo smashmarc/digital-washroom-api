@@ -20,7 +20,7 @@ class LogResource extends JsonResource
             'user_id'    => $this->user_id,
             'note'       => $this->note,
             'room'       => new RoomResource($this->whenLoaded('room')),
-            'user'       => 'todo',
+            'user'       => new UserResource($this->whenLoaded('user')),
             'created_at' => $this->created_at?->toDateTimeString(),
             'updated_at' => $this->updated_at?->toDateTimeString(),
         ];

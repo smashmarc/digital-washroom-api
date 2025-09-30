@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 use App\Constants\PermissionConstant;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -10,7 +11,9 @@ class CreateUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('create', User::class);
+       // return $this->user()->can('create', User::class);
+        Gate::authorize('create', User::class);
+        return true;
     }
 
     public function rules(): array

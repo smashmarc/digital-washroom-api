@@ -12,16 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('logs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('room_id')
-                ->constrained('rooms')
-                ->cascadeOnDelete();
-            $table->foreignId('user_id')
-                ->constrained('users')
-                ->cascadeOnDelete();
-            $table->text('note');
-            $table->timestamps();
-        });
+    $table->id();
+    $table->foreignId('room_id')
+        ->constrained('rooms')
+        ->cascadeOnDelete();
+    $table->foreignId('user_id')
+        ->constrained('users')
+        ->cascadeOnDelete();
+    $table->text('note')->nullable(); // just make it nullable directly
+    $table->tinyInteger('note_code')->default(0)
+        ->comment('0=not cleaned, 1=partially cleaned, 2=fully cleaned');
+    $table->timestamps();
+});
+
     }
 
     /**

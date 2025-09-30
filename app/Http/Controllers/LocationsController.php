@@ -2,40 +2,67 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use App\Models\Location;
+use App\Helpers\ApiResponse;
+use Illuminate\Http\Request;
+use App\Services\LocationService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
+use App\Http\Resources\LocationResource;
 use App\Http\Requests\CreateLocationRequest;
 use App\Http\Requests\UpdateLocationRequest;
-use App\Http\Resources\LocationResource;
-use App\Helpers\ApiResponse;
-use Illuminate\Http\JsonResponse;
 
 class LocationsController extends Controller
 {
-    /**
-     * Display a paginated listing of locations.
-     *
-     * @return JsonResponse
-     */
-    public function index(): JsonResponse
+    protected $locationService;
+    public function __construct(LocationService $locationService)
     {
-        $locations = Location::paginate(10);
-
-        return ApiResponse::paginated('Locations fetched successfully', $locations, LocationResource::class);
+        $this->locationService = $locationService;     
+    }
+    
+    public function index(Request $request): JsonResponse
+    {
+        Gate::authorize('view', Location::class);
+        $params = $request->only([
+            'search',
+            'sort_by',
+            'sort_dir',
+            'per_page',
+            'with',
+            'columns',
+            'exact'
+        ]);
+        $columns = ['name'];
+        try {
+            $items = $this->locationService->searchPaginatedList($params, $columns);
+            return ApiResponse::success(
+                'Location fetched successfully.',
+                $items,
+                200,
+                LocationResource::class
+            );
+           
+        } catch (Exception $e) {
+            return ApiResponse::error('Failed to fetch roles.', 500);
+        }
     }
 
-    /**
-     * Store a newly created location.
-     *
-     * @param  CreateLocationRequest  $request
-     * @return JsonResponse
-     */
     public function store(CreateLocationRequest $request): JsonResponse
     {
-        $location = Location::create($request->validated());
-
-        return ApiResponse::success('Location created successfully', new LocationResource($location), 201);
+        //Gate::authorize('create', User::class);
+        try {
+            $item = $this->locationService->create($request->validated());
+            return ApiResponse::success(
+                'Location created successfully.',
+                new LocationResource($item),
+                201,
+                null
+            );
+        } catch (Exception $e) {
+            return ApiResponse::error('Something went wrong. please contact your administrator', 500);
+        }
     }
-
     /**
      * Display the specified location.
      *
@@ -44,6 +71,7 @@ class LocationsController extends Controller
      */
     public function show(Location $location): JsonResponse
     {
+        Gate::authorize('view', Location::class);
         return ApiResponse::success('Location fetched successfully', new LocationResource($location));
     }
 
@@ -69,6 +97,7 @@ class LocationsController extends Controller
      */
     public function destroy(Location $location): JsonResponse
     {
+        Gate::authorize('delete', Location::class);
         $location->delete();
 
         return ApiResponse::success('Location deleted successfully', null, 200);

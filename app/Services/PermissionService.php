@@ -6,21 +6,25 @@ use Spatie\Permission\Models\Permission;
 use App\Helpers\ApiResponse;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-class PermissionService
+class PermissionService extends BaseService
 
 {
-    public function list(int $perPage = 15, ?string $search = null)
+
+    public function __construct(Permission $model)
     {
-        $query = Permission::query();
-
-        if ($search) {
-            $query->where('name', 'like', "%{$search}%");
-        }
-
-        $paginator = $query->paginate($perPage);
-
-        return $paginator;
+        parent::__construct($model);
     }
+
+    /**
+     * List roles with custom searchable columns.
+     */
+    public function searchPaginatedList(array $params = [], $columns=[])
+    {
+        return parent::list($params, $columns);
+    }
+    
+
+    
 
     public function create(array $data)
     {

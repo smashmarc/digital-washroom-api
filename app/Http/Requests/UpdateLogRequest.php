@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Log;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateLogRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        Gate::authorize('update', Log::class);
         return true; // adjust if needed
     }
 

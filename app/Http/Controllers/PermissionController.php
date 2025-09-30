@@ -2,29 +2,52 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
+use App\Models\Permission;
 use App\Helpers\ApiResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use App\Services\PermissionService;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\PermissionRequest;
 use App\Http\Resources\PermissionResource;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use App\Models\Permission;
 use App\Http\Requests\CreatePermissionRequest;
 
 class PermissionController extends Controller
 {
+
+    protected $permissionService;
+    public function __construct(PermissionService $permissionService)
+    {
+        $this->permissionService = $permissionService;
+    }
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): JsonResponse
     {
-        $permissions = Permission::latest()->paginate($request->get('per_page', 10));
 
-        return ApiResponse::paginated(
-            'Permissions retrieved successfully.',
-            $permissions,
-            PermissionResource::class
-        );
+        Gate::authorize('manage', Permission::class);
+        $params = $request->only([
+            'search',
+            'sort_by',
+            'sort_dir',
+            'per_page',
+            'with'
+        ]);
+        $columns = ['name'];
+        try {
+            $roles = $this->permissionService->searchPaginatedList($params, $columns);
+            return ApiResponse::success(
+                'Roles fetched successfully.',
+                $roles,
+                200,
+                PermissionResource::class
+            );
+        } catch (Exception $e) {
+            return ApiResponse::error('Failed to fetch roles.', 500);
+        }
     }
 
     /**
@@ -55,7 +78,7 @@ class PermissionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(PermissionRequest $request, Permission $permission): JsonResponse
+    public function update(Request $request, Permission $permission): JsonResponse
     {
         $permission->update($request->validated());
 

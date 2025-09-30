@@ -14,25 +14,30 @@ use App\Http\Controllers\RolesController;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+
 Route::get('rooms/search', [RoomsController::class, 'search']);
-
-
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout']);
 Route::post('/refresh', [AuthController::class, 'refresh']);
 Route::get('/me', [AuthController::class, 'me']);
-
 Route::post('/dev/create-superadmin', [DevController::class, 'createSuperAdmin']);
-
+Route::get('rooms/qr-view/{room}', [RoomsController::class, 'qrView']);
 
 Route::middleware('auth:api')->group(function () {
-        Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
     Route::prefix('roles')->group(function () {
+        Route::get('form-options', [RolesController::class, 'getFormOptions']);
         Route::post('{role}/attache-permissions', [RolesController::class, 'attachePermissions']);
     });
 
+    Route::prefix('users')->group(function () {
+        Route::get('form-options', [UsersController::class, 'getFormOptions']);
+    });
 
-
+    Route::prefix('rooms')->group(function () {
+        Route::get('form-options', [RoomsController::class, 'getFormOptions']);
+    });
     /**
      * Route Resource should be in Bottom to avoid overriding
      */
