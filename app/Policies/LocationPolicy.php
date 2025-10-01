@@ -23,7 +23,7 @@ class LocationPolicy
 
     public function view(User $user, Location $model): bool
     {
-        return $user->hasPermissionTo(PermissionConstant::LOCATION_VIEW, Location::class);
+        return $user->hasPermissionTo(PermissionConstant::LOCATION_VIEW);
     }
 
     public function create(User $user): bool

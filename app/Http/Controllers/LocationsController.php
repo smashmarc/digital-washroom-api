@@ -23,7 +23,7 @@ class LocationsController extends Controller
     
     public function index(Request $request): JsonResponse
     {
-        Gate::authorize('view', Location::class);
+        Gate::authorize('view', new Location());
         $params = $request->only([
             'search',
             'sort_by',
@@ -71,7 +71,7 @@ class LocationsController extends Controller
      */
     public function show(Location $location): JsonResponse
     {
-        Gate::authorize('view', Location::class);
+        Gate::authorize('view', new Location());
         return ApiResponse::success('Location fetched successfully', new LocationResource($location));
     }
 
@@ -97,7 +97,7 @@ class LocationsController extends Controller
      */
     public function destroy(Location $location): JsonResponse
     {
-        Gate::authorize('delete', Location::class);
+        Gate::authorize('delete', new Location());
         $location->delete();
 
         return ApiResponse::success('Location deleted successfully', null, 200);

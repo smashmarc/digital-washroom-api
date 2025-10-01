@@ -11,7 +11,7 @@ class UpdateLocationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        Gate::authorize('update', Location::class);
+        Gate::authorize('update', new Location());
         return true;
     }
 
