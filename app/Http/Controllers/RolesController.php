@@ -33,7 +33,7 @@ class RolesController extends Controller
     //         ->values(),
     // ]);
 
-       if (!Gate::any('view', \App\Models\Role::class)){
+       if (!Gate::any('view', new \App\Models\Role())){
             abort(403);
        }
         $params = $request->only([
@@ -59,6 +59,7 @@ class RolesController extends Controller
 
     public function store(CreateRoleRequest $request): JsonResponse
     {
+        Gate::authorize('create', new Role());
         try {
             $role = $this->roleService->create($request->validated());
             return ApiResponse::success('Role created successfully.', new RoleResource($role), 201);
@@ -69,6 +70,7 @@ class RolesController extends Controller
 
     public function update(CreateRoleRequest $request, \App\Models\Role $role): JsonResponse
     {
+        Gate::authorize('update', new Role());
         try {
             $role = $this->roleService->update($request->validated(), $role);
             return ApiResponse::success('Role updated successfully.', new RoleResource($role));
@@ -79,7 +81,7 @@ class RolesController extends Controller
 
     public function show(Role $role): JsonResponse
     {
-        Gate::authorize('view', Role::class);
+        Gate::authorize('view', new Role());
         $role->load('permissions');
         try {
             return ApiResponse::success(

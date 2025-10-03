@@ -33,7 +33,7 @@ class RolePolicy
         return $user->hasPermissionTo(PermissionConstant::ROLE_CREATE);
     }
 
-    public function update(User $user, User $model): bool
+    public function update(User $user, Role $model): bool
     {
         // if ($user->hasPermissionTo(PermissionConstant::USER_UPDATE)) {
         //     return $model->id === $user->id;
@@ -42,7 +42,7 @@ class RolePolicy
         return $user->hasPermissionTo(PermissionConstant::ROLE_UPDATE);
     }
 
-    public function delete(User $user, User $model): bool
+    public function delete(User $user, Role $model): bool
     {
         return $user->hasPermissionTo(PermissionConstant::ROLE_DELETE);
     }
