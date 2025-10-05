@@ -24,7 +24,7 @@ class CreateUserRequest extends FormRequest
             'password' => ['required', 'string', 'min:6'],
             'roles'    => ['nullable', 'array'], // roles array
             'roles.*'  => ['integer', 'exists:roles,id'], // each role must exist in roles table
-            'location_id'=>['required', 'exists:locations,id'],
+            'location_id'=>['nullable', 'exists:locations,id'],
             'username' =>['required', 'string', 'max:32', 'unique:users,username']
         ];
     }
@@ -37,7 +37,7 @@ class CreateUserRequest extends FormRequest
         return [
             'roles.*.exists' => 'One or more selected roles are invalid.',
              'location_id.exists'=>'location is invalid',
-              'location_id.required'=>'location is required',
+              
         ];
     }
 }

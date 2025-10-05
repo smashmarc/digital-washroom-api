@@ -34,7 +34,7 @@ class UpdateUserRequest extends FormRequest
             'password' => ['nullable', 'string', 'min:6'],
             'roles'    => ['nullable', 'array'], // roles array
             'roles.*'  => ['integer', 'exists:roles,id'], // each role must exist in roles table
-            'location_id' => ['integer', 'exists:locations,id'],
+            'location_id' => ['nullable', 'exists:locations,id'],
             'username' => [
                 'required',
                 'string',
