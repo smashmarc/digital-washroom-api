@@ -21,19 +21,34 @@ class UpdateUserRequest extends FormRequest
 
     public function rules(): array
     {
-        
+
         return [
             'name'     => ['required', 'string', 'max:255'],
             'email' => [
-                    'sometimes',
-                    'string',
-                    'email',
-                    'max:255',
-                    Rule::unique('users', 'email')->ignore($this->user->id),
-                ],
+                'sometimes',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($this->user->id),
+            ],
             'password' => ['nullable', 'string', 'min:6'],
             'roles'    => ['nullable', 'array'], // roles array
             'roles.*'  => ['integer', 'exists:roles,id'], // each role must exist in roles table
+            'location_id' => ['integer', 'exists:locations,id'],
+            'username' => [
+                'required',
+                'string',
+                'max:32',
+                Rule::unique('users', 'username')->ignore($this->user->id),
+            ],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'roles.*.exists' => 'One or more selected roles are invalid.',
+            'location_id.exists' => 'location is invalid',
         ];
     }
 }

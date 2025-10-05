@@ -2,9 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\Role;
 use Exception;
+use App\Models\Role;
 use App\Models\User;
+use App\Models\Location;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -27,8 +28,9 @@ class UserService extends BaseService
     public function getFormOptions()
     {        
          try {
-           $roles= Role::all();          
-           return ['roles'=>$roles];        
+           $roles= Role::all();
+           $locations=Location::all();          
+           return ['roles'=>$roles, 'locations'=>$locations];        
         } catch (Exception $e) {               
             Log::error('Failed to fetch form options ' . $e->getMessage(), [               
                 'trace' => $e->getTraceAsString(),

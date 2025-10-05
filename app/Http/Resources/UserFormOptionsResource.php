@@ -15,7 +15,8 @@ class UserFormOptionsResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'roles' => RoleResource::collection($this['roles'])
+            'roles' => RoleResource::collection($this['roles']),
+            'locations'=>LocationResource::collection($this['locations'])
         ];
         
     }
