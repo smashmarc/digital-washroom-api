@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DevController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LogsController;
 use App\Http\Controllers\RoomsController;
 use App\Http\Controllers\UsersController;
@@ -38,6 +39,9 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('rooms')->group(function () {
         Route::get('form-options', [RoomsController::class, 'getFormOptions']);
     });
+
+    Route::get('dashboard', [DashboardController::class, 'index']);
+
     /**
      * Route Resource should be in Bottom to avoid overriding
      */
