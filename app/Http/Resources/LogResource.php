@@ -14,6 +14,13 @@ class LogResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+
+        //note code 0=not cleaned, 1=partially cleaned, 2=fully cleaned
+        $statusMap = [
+        0 => 'Not Cleaned',
+        1 => 'Partially Cleaned',
+        2 => 'Fully Cleaned',
+    ];
        return [
             'id'         => $this->id,
             'room_id'    => $this->room_id,
@@ -23,6 +30,8 @@ class LogResource extends JsonResource
             'user'       => new UserResource($this->whenLoaded('user')),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
+            'status_code' => $this->note_code,
+            'status'      => $statusMap[$this->note_code] ?? 'Unknown',
         ];
     }
 }

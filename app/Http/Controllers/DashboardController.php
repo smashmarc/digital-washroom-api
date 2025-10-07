@@ -63,7 +63,7 @@ class DashboardController extends Controller
         $logsToday = Log::whereDate('created_at', today())->count();
 
         // top active user today
-        $topUserToday = User::select('users.id', 'users.name')
+        $topUserToday = User::select('users.id', 'users.name', 'users.username')
             ->join('logs', 'users.id', '=', 'logs.user_id')
             ->whereDate('logs.created_at', today())
             ->groupBy('users.id', 'users.name')
@@ -106,7 +106,7 @@ class DashboardController extends Controller
 
         // recent cleaning logs
         $recentCleaningLogs = Log::with(['room.location', 'user'])
-            ->where('note_code', '!=', 0)
+            ->where('note_code', '!=', 4)
             ->latest()
             ->take(10)
             ->get();
