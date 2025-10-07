@@ -16,19 +16,19 @@ class DashboardController extends Controller
     {
 
 
-        // total locations
         $locationsCount = Location::count();
 
         // total rooms
         $roomsCount = Room::count();
 
         // rooms cleaned today (logs with note_code != 0)
-        $roomsCleanedToday = Log::whereDate('created_at', today())
-            ->where('note_code', '!=', 0)
-            ->distinct('room_id')
-            ->count('room_id');
+        $roomsCleanedToday = Room::whereHas('logs', function ($q) {
+            $q->whereDate('created_at', today())
+                ->where('note_code', '!=', 0);
+        })
+            ->count();
 
-        // rooms needing attention (no log in last X hours, example: 24h)
+        // rooms needing attention (no log in last 24h)
         $roomsNeedingAttention = Room::whereDoesntHave('logs', function ($q) {
             $q->where('note_code', '!=', 0)
                 ->where('created_at', '>=', now()->subHours(24));
@@ -36,20 +36,19 @@ class DashboardController extends Controller
             ->count();
 
         // cleaning trend (logs per day, last 7 days)
-        $cleaningTrend = Log::selectRaw('DATE(created_at) as date, COUNT(*) as total')
+        $cleaningTrend = Log::query()
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
             ->where('note_code', '!=', 0)
             ->where('created_at', '>=', now()->subDays(7))
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
-        // logs by location
-        $logsByLocation = Log::selectRaw('locations.name as location, COUNT(logs.id) as total')
-            ->join('rooms', 'logs.room_id', '=', 'rooms.id')
-            ->join('locations', 'rooms.location_id', '=', 'locations.id')
-            ->groupBy('locations.name')
-            ->get();
-
+        // logs by location (using relationships instead of raw joins)
+        $logsByLocation = Location::withCount(['rooms as total' => function ($q) {
+            $q->join('logs', 'rooms.id', '=', 'logs.room_id');
+        }])
+            ->get(['id', 'name']);
 
         // total users
         $totalUsers = User::count();
@@ -57,46 +56,42 @@ class DashboardController extends Controller
         // active users today (who created logs today)
         $activeUsersToday = User::whereHas('logs', function ($q) {
             $q->whereDate('created_at', today());
-        })->count();
+        })
+            ->count();
 
         // logs created today
         $logsToday = Log::whereDate('created_at', today())->count();
 
         // top active user today
-        $topUserToday = User::select('users.id', 'users.name', 'users.username')
-            ->join('logs', 'users.id', '=', 'logs.user_id')
-            ->whereDate('logs.created_at', today())
-            ->groupBy('users.id', 'users.name')
-            ->orderByRaw('COUNT(logs.id) DESC')
-            ->first();
+        $topUserToday = User::withCount(['logs as logs_today' => function ($q) {
+            $q->whereDate('created_at', today());
+        }])
+            ->orderByDesc('logs_today')
+            ->first(['id', 'name', 'username']);
 
-
-
-        // logs per user (last 7 days)
-        $logsPerUser = Log::selectRaw('users.name, COUNT(logs.id) as total')
-            ->join('users', 'logs.user_id', '=', 'users.id')
-            ->where('logs.created_at', '>=', now()->subDays(7))
-            ->groupBy('users.name')
+        // logs per user (last 7 days, top 5)
+        $logsPerUser = User::withCount(['logs as total' => function ($q) {
+            $q->where('created_at', '>=', now()->subDays(7));
+        }])
             ->orderByDesc('total')
             ->take(5)
-            ->get();
+            ->get(['id', 'name']);
 
         // user activity trend (active users per day)
-        $userActivityTrend = Log::selectRaw('DATE(created_at) as date, COUNT(DISTINCT user_id) as total_users')
+        $userActivityTrend = Log::query()
+            ->selectRaw('DATE(created_at) as date, COUNT(DISTINCT user_id) as total_users')
             ->where('created_at', '>=', now()->subDays(7))
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
         // top users by logs (this month)
-        $topUsersThisMonth = User::select('users.id', 'users.name')
-            ->join('logs', 'users.id', '=', 'logs.user_id')
-            ->whereMonth('logs.created_at', now()->month)
-            ->groupBy('users.id', 'users.name')
-            ->selectRaw('COUNT(logs.id) as total_logs')
+        $topUsersThisMonth = User::withCount(['logs as total_logs' => function ($q) {
+            $q->whereMonth('created_at', now()->month);
+        }])
             ->orderByDesc('total_logs')
             ->take(10)
-            ->get();
+            ->get(['id', 'name']);
 
         // latest user actions (activity feed)
         $latestUserActions = Log::with(['room.location', 'user'])
@@ -118,7 +113,6 @@ class DashboardController extends Controller
         })
             ->with('location')
             ->get();
-
 
 
 
