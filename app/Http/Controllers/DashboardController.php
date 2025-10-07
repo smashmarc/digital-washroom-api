@@ -70,12 +70,14 @@ class DashboardController extends Controller
             ->first(['id', 'name', 'username']);
 
         // logs per user (last 7 days, top 5)
-        $logsPerUser = User::withCount(['logs as total' => function ($q) {
-            $q->where('created_at', '>=', now()->subDays(7));
-        }])
-            ->orderByDesc('total')
-            ->take(5)
-            ->get(['id', 'name']);
+        // uncomment if needed
+        // $logsPerUser = User::withCount(['logs as total' => function ($q) {
+        //     $q->where('created_at', '>=', now()->subDays(7));
+        // }])
+        //     ->orderByDesc('total')
+        //     ->take(5)
+        //     ->get(['id', 'name']);
+        $logsPerUser=[];
 
         // user activity trend (active users per day)
         $userActivityTrend = Log::query()
