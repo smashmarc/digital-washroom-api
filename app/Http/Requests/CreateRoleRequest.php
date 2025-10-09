@@ -38,6 +38,7 @@ class CreateRoleRequest extends FormRequest
     {
         return [
             'permissions.*.exists' => 'One or more selected permissions are invalid.',
+            'name.unique'=>'Role Already exists.'
         ];
     }
 

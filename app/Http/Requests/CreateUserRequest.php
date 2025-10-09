@@ -11,7 +11,7 @@ class CreateUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-       // return $this->user()->can('create', User::class);
+        // return $this->user()->can('create', User::class);
         Gate::authorize('create', User::class);
         return true;
     }
@@ -24,8 +24,8 @@ class CreateUserRequest extends FormRequest
             'password' => ['required', 'string', 'min:6'],
             'roles'    => ['nullable', 'array'], // roles array
             'roles.*'  => ['integer', 'exists:roles,id'], // each role must exist in roles table
-            'location_id'=>['nullable', 'exists:locations,id'],
-            'username' =>['required', 'string', 'max:32', 'unique:users,username']
+            'location_id' => ['nullable', 'exists:locations,id'],
+            'username' => ['required', 'string', 'max:32', 'unique:users,username']
         ];
     }
 
@@ -36,8 +36,9 @@ class CreateUserRequest extends FormRequest
     {
         return [
             'roles.*.exists' => 'One or more selected roles are invalid.',
-             'location_id.exists'=>'location is invalid',
-              
+            'location_id.exists' => 'location is invalid.',
+            'email.unique'=>'Email already exists.',
+            'username.unique'=>'Username already exists.'
         ];
     }
 }

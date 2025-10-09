@@ -18,6 +18,7 @@ class UserResource extends JsonResource
             'roles' => RoleResource::collection($this->whenLoaded('roles')),
             'location_id'=> $this->location_id,
             'username'=>$this->username,
+            'location'=>new LocationResource($this->whenLoaded('location')),
         ];
     }
 }

@@ -6,6 +6,7 @@ namespace App\Models;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -75,5 +76,10 @@ class User extends  Authenticatable implements JWTSubject
     public function logs()
     {
         return $this->hasMany(Log::class);
+    }
+
+    public function location():BelongsTo
+    {
+        return $this->belongsTo(location::class);
     }
 }

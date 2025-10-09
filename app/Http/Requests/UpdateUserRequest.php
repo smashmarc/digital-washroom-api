@@ -45,10 +45,12 @@ class UpdateUserRequest extends FormRequest
     }
 
     public function messages(): array
-    {
+    {       
         return [
             'roles.*.exists' => 'One or more selected roles are invalid.',
-            'location_id.exists' => 'location is invalid',
+            'location_id.exists' => 'location is invalid.',
+            'email.unique'=>'Email already exists.',
+            'username.unique'=>'Username already exists.'
         ];
     }
 }

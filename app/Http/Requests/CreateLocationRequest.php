@@ -21,4 +21,13 @@ class CreateLocationRequest extends FormRequest
             'address' => 'required|string',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            
+            'name.unique'=>'Location Already exists.'
+        ];
+    }
+
 }
