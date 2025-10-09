@@ -17,9 +17,9 @@ class AuthController extends Controller
 
         if (!$token = auth()->attempt($credentials)) {
             return ApiResponse::error(
-                'Invalid email or password',
+                'Incorrect username or password',
                 401,
-                ['email' => ['These credentials do not match our records.']]
+                ['username' => ['These credentials do not match our records.']]
             );
         }
 
