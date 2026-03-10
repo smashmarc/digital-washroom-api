@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'entra' =>[
+        'tenant_id' => env('ENTRA_TENANT_ID', '859b41b6-130f-4d13-a693-1ffec4e7cb5a'),
+        'app_id'=> env('ENTRA_APP_ID', '369e6a61-ab9f-4a36-9c05-f4ef4225e815'),
+        'secret'=>env('ENTRA_CLIENT_SECRET', 'useEnvValueForSecret'),
+    ]
 ];

@@ -28,6 +28,7 @@ class PermissionController extends Controller
     public function index(Request $request): JsonResponse
     {
 
+    
         Gate::authorize('manage', Permission::class);
         $params = $request->only([
             'search',

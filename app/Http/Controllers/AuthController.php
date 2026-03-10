@@ -31,7 +31,7 @@ class AuthController extends Controller
      */
     public function me()
     {
-        return ApiResponse::success('User profile', auth()->user());
+        return ApiResponse::success('User profile', auth()->guard('entra')->user());
     }
 
     /**

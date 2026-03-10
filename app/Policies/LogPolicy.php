@@ -2,37 +2,38 @@
 
 namespace App\Policies;
 
-use App\Models\User;
-use App\Constants\Role;
-use App\Models\Location;
 use App\Constants\PermissionConstant;
+use App\Constants\Role as RoleConstant;
 use App\Models\Log;
+use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Support\Facades\Auth;
+
 
 class LogPolicy
 {
     use HandlesAuthorization;
 
-    public function before(User $user, string $ability): ?bool
-    {
-        if ($user->hasRole(Role::ADMINISTRATOR)) {
-            return true;
-        }
 
-        return null; 
+    protected function entraUser(): ?User
+    {
+        return Auth::guard('entra')->user();
     }
 
-    public function view(User $user, Log $model): bool
+    public function before(?User $user, string $ability): ?bool
     {
-        return $user->hasPermissionTo(PermissionConstant::LOG_VIEW);
+        $user = $this->entraUser();
+        return $user?->hasRole(RoleConstant::ADMINISTRATOR) ? true : null;
     }
 
-    public function create(User $user): bool
+    public function view(?User $user, Log $model): bool
     {
-       
-        return $user->hasPermissionTo(PermissionConstant::LOG_CREATE);
+
+        return $this->entraUser()?->hasPermissionTo(PermissionConstant::LOG_VIEW) ?? false;
     }
 
-  
-
+    public function create(?User $user): bool
+    {       
+        return $this->entraUser()?->hasPermissionTo(PermissionConstant::LOG_CREATE) ?? false;
+    }
 }

@@ -2,47 +2,64 @@
 
 namespace App\Policies;
 
-use App\Models\User;
-use App\Constants\Role;
-use App\Models\Location;
 use App\Constants\PermissionConstant;
+use App\Constants\Role as RoleConstant;
+use App\Models\Location;
+use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Support\Facades\Auth;
 
 class LocationPolicy
 {
     use HandlesAuthorization;
 
-    public function before(User $user, string $ability): ?bool
+     /**
+     * Get the current Entra user.
+     */
+    protected function entraUser(): ?User
     {
-        if ($user->hasRole(Role::ADMINISTRATOR)) {
-            return true;
-        }
-
-        return null; 
+        return Auth::guard('entra')->user();
     }
 
-    public function view(User $user, Location $model): bool
+    /**
+     * Run before any policy check.
+     * Admins bypass all checks automatically.
+     */
+    public function before(?User $user, string $ability): ?bool
     {
-        return $user->hasPermissionTo(PermissionConstant::LOCATION_VIEW);
+        $user = $this->entraUser();
+        return $user?->hasRole(RoleConstant::ADMINISTRATOR) ? true : null;
     }
 
-    public function create(User $user): bool
+    /**
+     * Check if the user can view locations.
+     */
+    public function view(Location $model): bool
     {
-       
-        return $user->hasPermissionTo(PermissionConstant::LOCATION_CREATE);
+        return $this->entraUser()?->hasPermissionTo(PermissionConstant::LOCATION_VIEW) ?? false;
     }
 
-    public function update(User $user, Location $model): bool
+    /**
+     * Check if the user can create locations.
+     */
+    public function create(): bool
     {
-        // if ($user->hasPermissionTo(PermissionConstant::USER_UPDATE)) {
-        //     return $model->id === $user->id;
-        // }   
-        //return false;
-        return $user->hasPermissionTo(PermissionConstant::LOCATION_UPDATE);
+        return $this->entraUser()?->hasPermissionTo(PermissionConstant::LOCATION_CREATE) ?? false;
     }
 
-    public function delete(User $user, Location $model): bool
+    /**
+     * Check if the user can update locations.
+     */
+    public function update(Location $model): bool
     {
-        return $user->hasPermissionTo(PermissionConstant::LOCATION_DELETE);
+        return $this->entraUser()?->hasPermissionTo(PermissionConstant::LOCATION_UPDATE) ?? false;
+    }
+
+    /**
+     * Check if the user can delete locations.
+     */
+    public function delete(Location $model): bool
+    {
+        return $this->entraUser()?->hasPermissionTo(PermissionConstant::LOCATION_DELETE) ?? false;
     }
 }

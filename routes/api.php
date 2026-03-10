@@ -1,16 +1,17 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DevController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\LogsController;
-use App\Http\Controllers\RoomsController;
-use App\Http\Controllers\UsersController;
+use App\Http\Controllers\DevController;
 use App\Http\Controllers\LocationsController;
+use App\Http\Controllers\LogsController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RolesController;
+use App\Http\Controllers\RoomsController;
+use App\Http\Controllers\SsoAuthController;
+use App\Http\Controllers\UsersController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -26,6 +27,11 @@ Route::get('rooms/qr-view/{room}', [RoomsController::class, 'qrView']);
 
 Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+  
+    
+});
+
+Route::middleware('entra.auth')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::prefix('roles')->group(function () {
         Route::get('form-options', [RolesController::class, 'getFormOptions']);
@@ -52,7 +58,7 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('permissions', PermissionController::class);
     Route::apiResource('roles', RolesController::class);
 });
-
+Route::post('/auth/sso-login', [SsoAuthController::class, 'login']);
 
 // Route::controller(LogsController::class)->group(function () {
 //     Route::get('logs', 'index');

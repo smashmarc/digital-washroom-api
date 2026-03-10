@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class RoomResource extends JsonResource
@@ -16,9 +15,13 @@ class RoomResource extends JsonResource
             'qr_code' => $this->qr_code,
             'logs' => LogResource::collection($this->whenLoaded('logs')),
             'last_cleaned' => $this->whenLoaded('lastCleanedLog', function () {
-                return optional($this->lastCleanedLog)->created_at;
+                return $this->lastCleanedLog->map(function ($log) {
+                    return [             
+                       $log->created_at
+                    ];
+                });
             }),
-            'location'=>new LocationResource($this->whenLoaded('location'))
+            'location' => new LocationResource($this->whenLoaded('location'))
         ];
     }
 }

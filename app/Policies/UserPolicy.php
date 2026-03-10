@@ -2,45 +2,61 @@
 
 namespace App\Policies;
 
-use App\Models\Role;
-use App\Models\User;
 use App\Constants\PermissionConstant;
 use App\Constants\Role as RoleConstant;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class UserPolicy
 {
 
-   public function before(User $user, string $ability): ?bool
-    {      
-        if ($user->hasRole(RoleConstant::ADMINISTRATOR)) {
-            return true;
-        }
-        return null;
+    /**
+     * Get the current Entra user.
+     */
+    protected function entraUser(): ?User
+    {
+        return Auth::guard('entra')->user();
     }
 
-    public function view(User $user): bool
+    /**
+     * Run before any policy check.
+     * Admins bypass all checks automatically.
+     */
+    public function before(?User $user, string $ability): ?bool
     {
-       
-        return $user->hasPermissionTo(PermissionConstant::USER_VIEW);
+        $user = $this->entraUser();
+        return $user?->hasRole(RoleConstant::ADMINISTRATOR) ? true : null;
     }
 
-    public function create(User $user): bool
+    /**
+     * Check if the user can view other users.
+     */
+    public function view(): bool
     {
-       
-        return $user->hasPermissionTo(PermissionConstant::USER_CREATE);
+        return $this->entraUser()?->hasPermissionTo(PermissionConstant::USER_VIEW) ?? false;
     }
 
-    public function update(User $user): bool
+    /**
+     * Check if the user can create users.
+     */
+    public function create(): bool
     {
-        // if ($user->hasPermissionTo(PermissionConstant::USER_UPDATE)) {
-        //     return $model->id === $user->id;
-        // }   
-        //return false;
-        return $user->hasPermissionTo(PermissionConstant::USER_UPDATE);
+        return $this->entraUser()?->hasPermissionTo(PermissionConstant::USER_CREATE) ?? false;
     }
 
-    public function delete(User $user): bool
+    /**
+     * Check if the user can update users.
+     */
+    public function update(): bool
     {
-        return $user->hasPermissionTo(PermissionConstant::USER_DELETE);
+        return $this->entraUser()?->hasPermissionTo(PermissionConstant::USER_UPDATE) ?? false;
+    }
+
+    /**
+     * Check if the user can delete users.
+     */
+    public function delete(): bool
+    {
+        return $this->entraUser()?->hasPermissionTo(PermissionConstant::USER_DELETE) ?? false;
     }
 }

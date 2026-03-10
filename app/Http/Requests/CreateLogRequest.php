@@ -3,8 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Models\Log;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class CreateLogRequest extends FormRequest
 {
@@ -27,8 +28,17 @@ class CreateLogRequest extends FormRequest
     // uncomment if needed
     public function validated($key = null, $default = null)
     {
-        $data = parent::validated($key, $default);
-        $data['user_id'] = auth()->id(); // attach authenticated user
-        return $data;
+           $data = parent::validated($key, $default);
+
+    $user = Auth::guard('entra')->user();
+
+    if (!$user) {
+        throw new \RuntimeException('Unauthenticated user cannot create log.');
+    }
+
+    $data['user_id'] = $user->id;
+
+    return $data;
+
     }
 }

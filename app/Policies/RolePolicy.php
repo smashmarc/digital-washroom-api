@@ -2,48 +2,63 @@
 
 namespace App\Policies;
 
+use App\Constants\PermissionConstant;
+use App\Constants\Role as RoleConstant;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
-use App\Constants\PermissionConstant;
-use App\Constants\Role as RoleConstant;
+use Illuminate\Support\Facades\Auth;
 
 class RolePolicy
 {
 
-   public function before(User $user, string $ability): ?bool
+   /**
+     * Get the current Entra user.
+     */
+    protected function entraUser(): ?User
     {
-        
-        if ($user->hasRole(RoleConstant::ADMINISTRATOR)) {
-            return true;
-        }
-
-        return null; 
+        return Auth::guard('entra')->user();
     }
 
-    public function view(User $user): bool
+    /**
+     * Run before any policy check.
+     * Admins bypass all checks automatically.
+     */
+    public function before(?User $user, string $ability): ?bool
     {
-        
-        return $user->hasPermissionTo(PermissionConstant::ROLE_VIEW);
+        $user = $this->entraUser();
+        return $user?->hasRole(RoleConstant::ADMINISTRATOR) ? true : null;
     }
 
-    public function create(User $user): bool
+    /**
+     * Check if the user can view roles.
+     */
+    public function view(): bool
     {
-       
-        return $user->hasPermissionTo(PermissionConstant::ROLE_CREATE);
+        return $this->entraUser()?->hasPermissionTo(PermissionConstant::ROLE_VIEW) ?? false;
     }
 
-    public function update(User $user, Role $model): bool
+    /**
+     * Check if the user can create roles.
+     */
+    public function create(): bool
     {
-        // if ($user->hasPermissionTo(PermissionConstant::USER_UPDATE)) {
-        //     return $model->id === $user->id;
-        // }   
-        //return false;
-        return $user->hasPermissionTo(PermissionConstant::ROLE_UPDATE);
+        return $this->entraUser()?->hasPermissionTo(PermissionConstant::ROLE_CREATE) ?? false;
     }
 
-    public function delete(User $user, Role $model): bool
+    /**
+     * Check if the user can update a role.
+     */
+    public function update(Role $model): bool
     {
-        return $user->hasPermissionTo(PermissionConstant::ROLE_DELETE);
+        return $this->entraUser()?->hasPermissionTo(PermissionConstant::ROLE_UPDATE) ?? false;
+    }
+
+    /**
+     * Check if the user can delete a role.
+     */
+    public function delete(Role $model): bool
+    {
+        return $this->entraUser()?->hasPermissionTo(PermissionConstant::ROLE_DELETE) ?? false;
     }
 }
