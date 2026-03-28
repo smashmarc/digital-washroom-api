@@ -29,14 +29,15 @@ class SsoAuthController extends Controller
         //         'azure_tenant_id' => $payload['tid'],
         //     ]
         // );
+        $userIdentifier = $payload['upn'] ?? $payload['preferred_username'] ?? $payload['email'];
 
         $user = User::firstOrNew(['azure_oid' =>  $payload['oid']]);
         $user->azure_oid = $payload['oid']; 
         $user->name = $payload['name'];
         $user->password = bcrypt("password"); //fake password
-        $user->email = $payload['upn'];
+        $user->email = $userIdentifier;
         $user->azure_tenant_id = $payload['tid'];
-        $user->username = $payload['upn'];
+        $user->username = $userIdentifier;
         $user->save();
         //only for web guard
         //auth()->login($user);
