@@ -42,6 +42,8 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('dashboard', [DashboardController::class, 'index']);
 
+    Route::post('force-change-password',[AuthController::class, 'changePassword']);
+
     /**
      * Route Resource should be in Bottom to avoid overriding
      */

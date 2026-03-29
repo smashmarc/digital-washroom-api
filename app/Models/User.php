@@ -68,6 +68,8 @@ class User extends  Authenticatable implements JWTSubject
                 'id' => $this->id,
                 'name' => $this->name,
                 'email' => $this->email,
+                'username'=>$this->username,
+                'force_password_change'=>$this->force_password_change,
                 'roles' => $roles,
                 'permissions' => $permissions,
             ]
