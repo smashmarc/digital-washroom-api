@@ -19,22 +19,22 @@ class ChangePasswordRequest extends FormRequest
             'current_password' => ['required', 'string'],
 
             //uncomment if you want complicated password
-            // 'new_password' => [
-            //     'required',
-            //     'string',
-            //     'confirmed', // requires new_password_confirmation
-            //     Password::min(8)
-            //         ->letters()
-            //         ->mixedCase()
-            //         ->numbers()
-            //         ->symbols(), // 🔥 strong password
-            // ],
             'new_password' => [
                 'required',
                 'string',
-                'confirmed',
-                'min:6',
+                'confirmed', // requires new_password_confirmation
+                Password::min(12)              
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(), // 🔥 strong password
             ],
+            // 'new_password' => [
+            //     'required',
+            //     'string',
+            //     'confirmed',
+            //     'min:6',
+            // ],
         ];
     }
 
