@@ -1,16 +1,17 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DevController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\LogsController;
-use App\Http\Controllers\RoomsController;
-use App\Http\Controllers\UsersController;
+use App\Http\Controllers\DevController;
 use App\Http\Controllers\LocationsController;
+use App\Http\Controllers\LogsController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RolesController;
+use App\Http\Controllers\RoomsController;
+use App\Http\Controllers\UsersController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -53,6 +54,32 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('users', UsersController::class);
     Route::apiResource('permissions', PermissionController::class);
     Route::apiResource('roles', RolesController::class);
+});
+
+Route::get('/health', function () {
+    try {
+        DB::connection()->getPdo(); // check DB connection
+
+        return response()->json([
+            'status' => 'ok',
+            'timestamp' => now(),
+            'services' => [
+                'app' => 'up',
+                'db' => 'up',
+            ],
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'timestamp' => now(),
+            'services' => [
+                'app' => 'up',
+                'db' => 'down',
+            ],
+            'message' => $e->getMessage(),
+        ], 500);
+    }
 });
 
 
