@@ -16,25 +16,25 @@ class ChangePasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'current_password' => ['required', 'string'],
+            //'current_password' => ['required', 'string'],
 
             //uncomment if you want complicated password
-            'new_password' => [
-                'required',
-                'string',
-                'confirmed', // requires new_password_confirmation
-                Password::min(12)              
-                    ->letters()
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols(), // 🔥 strong password
-            ],
             // 'new_password' => [
             //     'required',
             //     'string',
-            //     'confirmed',
-            //     'min:6',
+            //     'confirmed', // requires new_password_confirmation
+            //     Password::min(12)              
+            //         ->letters()
+            //         ->mixedCase()
+            //         ->numbers()
+            //         ->symbols(), // 🔥 strong password
             // ],
+            'new_password' => [
+                'required',
+                'string',
+                'confirmed',
+                'min:6'
+            ],
         ];
     }
 
@@ -47,17 +47,18 @@ class ChangePasswordRequest extends FormRequest
         ];
     }
 
-    public function withValidator($validator)
-    {
-        $validator->after(function ($validator) {
-            $user = $this->user();
+    //uncomment if needed current password
+    // public function withValidator($validator)
+    // {
+    //     $validator->after(function ($validator) {
+    //         $user = $this->user();
 
-            if (!Hash::check($this->current_password, $user->password)) {
-                $validator->errors()->add(
-                    'current_password',
-                    'Current password is incorrect.'
-                );
-            }
-        });
-    }
+    //         if (!Hash::check($this->current_password, $user->password)) {
+    //             $validator->errors()->add(
+    //                 'current_password',
+    //                 'Current password is incorrect.'
+    //             );
+    //         }
+    //     });
+    // }
 }

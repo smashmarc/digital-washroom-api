@@ -43,7 +43,7 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('dashboard', [DashboardController::class, 'index']);
 
-    Route::post('force-change-password',[AuthController::class, 'changePassword']);
+    Route::post('force-change-password',[AuthController::class, 'forceChangePassword']);
 
     /**
      * Route Resource should be in Bottom to avoid overriding
@@ -56,31 +56,6 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('roles', RolesController::class);
 });
 
-Route::get('/health', function () {
-    try {
-        DB::connection()->getPdo(); // check DB connection
-
-        return response()->json([
-            'status' => 'ok',
-            'timestamp' => now(),
-            'services' => [
-                'app' => 'up',
-                'db' => 'up',
-            ],
-        ], 200);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'timestamp' => now(),
-            'services' => [
-                'app' => 'up',
-                'db' => 'down',
-            ],
-            'message' => $e->getMessage(),
-        ], 500);
-    }
-});
 
 
 // Route::controller(LogsController::class)->group(function () {

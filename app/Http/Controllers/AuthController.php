@@ -68,7 +68,7 @@ class AuthController extends Controller
         ]));
     }
 
-    public function changePassword(ChangePasswordRequest $request)
+    public function forceChangePassword(ChangePasswordRequest $request)
     {
 
 
