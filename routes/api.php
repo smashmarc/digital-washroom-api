@@ -39,12 +39,14 @@ Route::middleware('auth:api')->group(function () {
 
     Route::prefix('rooms')->group(function () {
         Route::get('form-options', [RoomsController::class, 'getFormOptions']);
+        Route::post('upload', [RoomsController::class, 'upload'])->name('rooms.upload');
     });
 
     Route::get('dashboard', [DashboardController::class, 'index']);
 
-    Route::post('force-change-password',[AuthController::class, 'forceChangePassword']);
+    Route::post('force-change-password', [AuthController::class, 'forceChangePassword']);
 
+    Route::post('/users/upload', [UsersController::class, 'upload'])->name('users.upload');
     /**
      * Route Resource should be in Bottom to avoid overriding
      */

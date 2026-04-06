@@ -26,13 +26,13 @@ class UserService extends BaseService
     }
 
     public function getFormOptions()
-    {        
-         try {
-           $roles= Role::all();
-           $locations=Location::all();          
-           return ['roles'=>$roles, 'locations'=>$locations];        
-        } catch (Exception $e) {               
-            Log::error('Failed to fetch form options ' . $e->getMessage(), [               
+    {
+        try {
+            $roles = Role::all();
+            $locations = Location::all();
+            return ['roles' => $roles, 'locations' => $locations];
+        } catch (Exception $e) {
+            Log::error('Failed to fetch form options ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
             throw $e;
@@ -47,8 +47,8 @@ class UserService extends BaseService
         try {
             $user = User::create($data);
             // Assign roles if provided
-           if (isset($data['roles'])) {
-                 $user->syncRoles($data['roles']);
+            if (isset($data['roles'])) {
+                $user->syncRoles($data['roles']);
             }
             DB::commit();
             return $user;
@@ -70,9 +70,9 @@ class UserService extends BaseService
             // Update user fields          
             $user->update($data);
             if (isset($data['roles'])) {
-                 $user->syncRoles($data['roles']);
+                $user->syncRoles($data['roles']);
             }
-                       
+
             DB::commit();
             return $user;
         } catch (\Exception $e) {
@@ -83,6 +83,71 @@ class UserService extends BaseService
                 'user_id' => $user->id,
             ]);
             throw $e; // controller will handle ApiResponse
+        }
+    }
+
+
+    public function upload(array $usersData): array
+    {
+        $createdUsers = [];
+
+        DB::beginTransaction();
+        try {
+            foreach ($usersData as $data) {
+                // 🔥 Handle location mapping
+            if (!empty($data['location'])) {
+                $location = Location::where('name', $data['location'])->first();
+
+                if ($location) {
+                    $data['location_id'] = $location->id;
+                } else {
+                    Log::warning('Location not found', [
+                        'input_location' => $data['location'],
+                        'user_email' => $data['email'] ?? null,
+                    ]);
+                }
+
+                // optional: remove raw location field
+                //unset($data['location']);
+            }
+
+                // Create user
+                Log::debug("create data", $data);
+                $user = User::create($data);
+
+                // Assign roles if provided
+                 if (!empty($data['roles']) && is_array($data['roles'])) {
+
+                // Get only existing roles from DB
+                $validRoles = Role::whereIn('name', $data['roles'])
+                    ->pluck('name')
+                    ->toArray();
+
+
+                if (!empty($validRoles)) {
+                    $user->syncRoles($validRoles);
+                } else {
+                    $user->syncRoles(["staff"]);
+                }
+            }
+
+            
+
+                $createdUsers[] = $user;
+            }
+
+            DB::commit();
+
+            return $createdUsers; // return all created users
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            Log::error('Failed to upload users: ' . $e->getMessage(), [
+                'data'  => $usersData,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            throw $e; // re-throw so the caller can handle it
         }
     }
 

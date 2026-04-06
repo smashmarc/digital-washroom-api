@@ -55,10 +55,10 @@ class Room extends Model
     // optional helper to get last cleaned log
     public function lastCleanedLog()
     {
-        return $this->hasOne(Log::class)
+        return $this->hasMany(Log::class)
         ->where('note_code', '!=', 0)
         ->orderByDesc('id')
-        ->limit(1);
+        ->limit(3);
     }
 
     

@@ -2,20 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use App\Models\User;
-use App\Helpers\ApiResponse;
-use Illuminate\Http\Request;
-use App\Services\UserService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
-use App\Http\Resources\UserResource;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Hash;
 use App\Constants\PermissionConstant;
+use App\Helpers\ApiResponse;
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserFormOptionsResource;
+use App\Http\Resources\UserResource;
+use App\Models\User;
+use App\Services\UserService;
+use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class UsersController extends Controller
 {
@@ -125,5 +127,53 @@ class UsersController extends Controller
         $user->delete();
 
         return ApiResponse::success('User deleted successfully', null, 200);
+    }
+
+    public function upload(Request $request): JsonResponse
+    {
+        // Only allow admins to upload
+        Gate::authorize('create', User::class);
+
+        try {
+            // Validate input: expect an array of users
+            $data = $request->validate([
+                'users' => 'required|array|min:1',
+                'users.*.name' => 'required|string|max:255',
+                'users.*.email' => 'required|email|unique:users,email',
+                'users.*.password' => 'nullable|string|min:6', // optional, will hash if provided
+                'users.*.roles' => 'nullable|array',
+                'users.*.roles.*' => 'string',
+                'users.*.location'=> 'string'
+            ]);
+
+            $usersData = collect($data['users'])->map(function ($user) {
+                // Hash password if provided, else generate random
+                $user['password'] = isset($user['password']) && $user['password']
+                    ? Hash::make($user['password'])
+                    : Hash::make("password");
+
+                return $user;
+            })->toArray();
+
+            // Call the service
+            $createdUsers = $this->userService->upload($usersData);
+
+            return ApiResponse::success(
+                'Users uploaded successfully.',
+                $createdUsers, // optionally wrap in Resource
+                201
+            );
+
+        } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed.', 422, $e->errors());
+        } catch (\Exception $e) {
+            Log::error('Failed to upload users: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return ApiResponse::error(
+                'Something went wrong while uploading users. Please contact your administrator.',
+                500
+            );
+        }
     }
 }
