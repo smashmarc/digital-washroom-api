@@ -22,7 +22,7 @@ class RoomsController extends Controller
     {
         $this->roomService = $roomService;
     }
-    
+
     public function index(Request $request): JsonResponse
     {
         Gate::authorize('view', Room::class);
@@ -44,7 +44,6 @@ class RoomsController extends Controller
                 200,
                 RoomResource::class
             );
-           
         } catch (Exception $e) {
             return ApiResponse::error('Failed to fetch rooms.', 500);
         }
@@ -70,7 +69,7 @@ class RoomsController extends Controller
      */
     public function show(Room $room): JsonResponse
     {
-         Gate::authorize('view', Room::class);
+        Gate::authorize('view', Room::class);
         $room->load(['location', 'logs.user']);
 
         return ApiResponse::success('Room fetched successfully', new RoomResource($room));
@@ -103,13 +102,13 @@ class RoomsController extends Controller
 
 
     public function getFormOptions()
-    {      
-        if (!Gate::any(['create', 'update'], Room::class)){
-             abort(403);
+    {
+        if (!Gate::any(['create', 'update'], Room::class)) {
+            abort(403);
         }
         try {
-           
-           $formOptions = $this->roomService->getFormOptions();
+
+            $formOptions = $this->roomService->getFormOptions();
 
             return ApiResponse::success(
                 'Form options fetched.',
@@ -117,7 +116,7 @@ class RoomsController extends Controller
                 200
             );
         } catch (\Exception $e) {
-             Log::error(__METHOD__ . $e->getMessage(), [               
+            Log::error(__METHOD__ . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
             return ApiResponse::error('Failed to fetch Form Options.', 500);
@@ -132,8 +131,40 @@ class RoomsController extends Controller
      */
     public function qrView(Room $room)
     {
-         $room->load(['location', 'lastCleanedLog']);
+        $room->load(['location', 'lastCleanedLog']);
 
         return ApiResponse::success('Room fetched successfully', new RoomResource($room));
+    }
+
+    public function upload(Request $request): JsonResponse
+    {
+        // Only allow admins to upload
+        Gate::authorize('create', Room::class);
+
+        try {
+            // Validate input: expect an array of users
+            $data = $request->validate([
+                'rooms' => 'required|array|min:1',
+                'rooms.*.name' => 'required|string|max:255',
+                'rooms.*.location' => 'required|string',
+            ]);
+              $roomsData = collect($data['rooms'])->toArray();
+            // Call the service
+            $createdRooms = $this->roomService->upload($roomsData);
+
+            return ApiResponse::success(
+                'Rooms uploaded successfully.',
+                $createdRooms, // optionally wrap in Resource
+                201
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to upload users: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return ApiResponse::error(
+                'Something went wrong while uploading rooms. Please contact your administrator.',
+                500
+            );
+        }
     }
 }
