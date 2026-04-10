@@ -6,6 +6,7 @@ use App\Constants\PermissionConstant;
 use App\Helpers\ApiResponse;
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Http\Requests\UploadUserRequest;
 use App\Http\Resources\UserFormOptionsResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
@@ -17,20 +18,22 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+
 
 class UsersController extends Controller
 {
 
     public function __construct(protected UserService $userService) {}
 
-    
+
     public function index(Request $request): JsonResponse
     {
 
-      Gate::authorize('view', User::class); 
- 
-      $params = $request->only([
+        Gate::authorize('view', User::class);
+
+        $params = $request->only([
             'search',
             'sort_by',
             'sort_dir',
@@ -48,7 +51,6 @@ class UsersController extends Controller
                 200,
                 UserResource::class
             );
-           
         } catch (Exception $e) {
             return ApiResponse::error('Failed to fetch roles.', 500);
         }
@@ -87,7 +89,7 @@ class UsersController extends Controller
 
         if (isset($validated['password']) && !empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
-        }else{
+        } else {
             unset($validated['password']);
         }
 
@@ -104,18 +106,18 @@ class UsersController extends Controller
     }
 
     public function getFormOptions()
-    {      
+    {
         Gate::authorize('update', User::class);
         try {
-           
-           $formOptions = $this->userService->getFormOptions();
+
+            $formOptions = $this->userService->getFormOptions();
 
             return ApiResponse::success(
                 'Form options fetched.',
                 new UserFormOptionsResource($formOptions)
             );
         } catch (\Exception $e) {
-             Log::error(__METHOD__ . $e->getMessage(), [               
+            Log::error(__METHOD__ . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
             return ApiResponse::error('Failed to fetch Form Options.', 500);
@@ -129,51 +131,31 @@ class UsersController extends Controller
         return ApiResponse::success('User deleted successfully', null, 200);
     }
 
-    public function upload(Request $request): JsonResponse
-    {
-        // Only allow admins to upload
-        Gate::authorize('create', User::class);
+    public function upload(UploadUserRequest $request): JsonResponse
+{
+    Gate::authorize('create', User::class);
 
-        try {
-            // Validate input: expect an array of users
-            $data = $request->validate([
-                'users' => 'required|array|min:1',
-                'users.*.name' => 'required|string|max:255',
-                'users.*.email' => 'required|email|unique:users,email',
-                'users.*.password' => 'nullable|string|min:6', // optional, will hash if provided
-                'users.*.roles' => 'nullable|array',
-                'users.*.roles.*' => 'string',
-                'users.*.location'=> 'string'
-            ]);
+    try {
+        $usersData = collect($request->validated()['users'])->map(function ($user) {
+            $user['password'] = isset($user['password']) && $user['password']
+                ? Hash::make($user['password'])
+                : Hash::make('password');
 
-            $usersData = collect($data['users'])->map(function ($user) {
-                // Hash password if provided, else generate random
-                $user['password'] = isset($user['password']) && $user['password']
-                    ? Hash::make($user['password'])
-                    : Hash::make("password");
+            return $user;
+        })->toArray();
 
-                return $user;
-            })->toArray();
+        $createdUsers = $this->userService->upload($usersData);
 
-            // Call the service
-            $createdUsers = $this->userService->upload($usersData);
+        return ApiResponse::success('Users uploaded successfully.', $createdUsers, 201);
 
-            return ApiResponse::success(
-                'Users uploaded successfully.',
-                $createdUsers, // optionally wrap in Resource
-                201
-            );
-
-        } catch (ValidationException $e) {
-            return ApiResponse::error('Validation failed.', 422, $e->errors());
-        } catch (\Exception $e) {
-            Log::error('Failed to upload users: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-            return ApiResponse::error(
-                'Something went wrong while uploading users. Please contact your administrator.',
-                500
-            );
-        }
+    } catch (\Exception $e) {
+        Log::error('Failed to upload users: ' . $e->getMessage(), [
+            'trace' => $e->getTraceAsString(),
+        ]);
+        return ApiResponse::error(
+            'Something went wrong while uploading users. Please contact your administrator.',
+            500
+        );
     }
+}
 }
