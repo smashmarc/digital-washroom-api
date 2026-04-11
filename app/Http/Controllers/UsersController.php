@@ -156,7 +156,7 @@ class UsersController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             return ApiResponse::error(
-                'Something went wrong while uploading users. Please contact your administrator.',
+                'Something went wrong while uploading users. Please contact your administrator. '. $e->getMessage(),
                 500
             );
         }
