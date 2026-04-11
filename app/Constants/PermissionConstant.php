@@ -51,6 +51,8 @@ class PermissionConstant
     public const LOG_VIEW   = 'logs.view';
     public const LOG_EXPORT = 'logs.export';
     public const LOG_CREATE = 'logs.create';
+    public const LOG_UPDATE = 'logs.update';
+    public const LOG_DELETE = 'logs.delete';
 
     /**
      * Return all permissions
@@ -91,7 +93,9 @@ class PermissionConstant
             // Logs
             self::LOG_VIEW,
             self::LOG_EXPORT,
-            self::LOG_CREATE
+            self::LOG_CREATE,
+            self::LOG_UPDATE,
+            self::LOG_DELETE,
         ];
     }
 }

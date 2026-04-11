@@ -63,18 +63,24 @@ class LogsController extends Controller
         return ApiResponse::success('Log fetched successfully', new LogResource($log->load(['room', 'user'])));
     }
 
-    public function update(UpdateLogRequest $request, Log $log): JsonResponse
+   public function update(UpdateLogRequest $request, Log $log): JsonResponse
     {
-        $log->update($request->validated());
-
-        return ApiResponse::success('Log updated successfully', new LogResource($log));
+        try {      
+            $updated = $this->logService->update($request->validated(), $log);
+            return ApiResponse::success('Log updated successfully', new LogResource($updated));
+        } catch (Exception $e) {
+            return ApiResponse::error('Failed to update log.', 500);
+        }
     }
 
     public function destroy(Log $log): JsonResponse
     {
-        Gate::authorize('delete', Log::class);
-        $log->delete();
-
-        return ApiResponse::success('Log deleted successfully', null, 200);
+        Gate::authorize('delete', $log);
+        try {
+            $this->logService->delete($log);
+            return ApiResponse::success('Log deleted successfully', null, 200);
+        } catch (Exception $e) {
+            return ApiResponse::error('Failed to delete log.', 500);
+        }
     }
 }

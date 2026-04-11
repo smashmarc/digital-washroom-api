@@ -42,9 +42,9 @@ class UsersController extends Controller
             'columns',
             'exact'
         ]);
-        $columns = ['name'];
+
         try {
-            $roles = $this->userService->searchPaginatedList($params, $columns);
+            $roles = $this->userService->searchPaginatedList($params);
             return ApiResponse::success(
                 'User fetched successfully.',
                 $roles,
@@ -58,22 +58,21 @@ class UsersController extends Controller
 
     public function store(CreateUserRequest $request): JsonResponse
     {
-      //simulate unauthorized respnse here
-          //return ApiResponse::error('Unauthorized', 401);
-        try {          
+        //simulate unauthorized respnse here
+        //return ApiResponse::error('Unauthorized', 401);
+        try {
             $user = $this->userService->create($request->validated());
             return ApiResponse::success(
                 'User created successfully.',
                 new UserResource($user),
                 201
             );
-           
         } catch (Exception $e) {
             return ApiResponse::error('Something went wrong. please contact your administrator', 500);
         }
     }
 
-  
+
 
     public function show(User $user): JsonResponse
     {
@@ -132,15 +131,19 @@ class UsersController extends Controller
     }
 
     public function upload(UploadUserRequest $request): JsonResponse
-{
-    Gate::authorize('create', User::class);
+    {
 
-    try {
-        $usersData = collect($request->validated()['users'])->map(function ($user) {
-            $user['password'] = isset($user['password']) && $user['password']
-                ? Hash::make($user['password'])
-                : Hash::make('password');
+        Gate::authorize('create', User::class);
 
+       try {
+        $validated       = $request->validated();
+        $defaultPassword = !empty($validated['default_password'])
+            ? Hash::make($validated['default_password']) // hash once
+            : null;
+
+        $usersData = collect($validated['users'])->map(function ($user) use ($defaultPassword) {
+            $user['password'] = $defaultPassword
+                ?? Hash::make($user['password'] ?? 'password'); // hash per row only if no default
             return $user;
         })->toArray();
 
@@ -148,14 +151,14 @@ class UsersController extends Controller
 
         return ApiResponse::success('Users uploaded successfully.', $createdUsers, 201);
 
-    } catch (\Exception $e) {
-        Log::error('Failed to upload users: ' . $e->getMessage(), [
-            'trace' => $e->getTraceAsString(),
-        ]);
-        return ApiResponse::error(
-            'Something went wrong while uploading users. Please contact your administrator.',
-            500
-        );
+    }  catch (\Exception $e) {
+            Log::error('Failed to upload users: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return ApiResponse::error(
+                'Something went wrong while uploading users. Please contact your administrator.',
+                500
+            );
+        }
     }
-}
 }

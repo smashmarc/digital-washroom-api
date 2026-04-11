@@ -17,9 +17,11 @@ class UpdateLogRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'room_id' => ['sometimes', 'exists:rooms,id'],
-            'user_id' => ['sometimes', 'exists:users,id'],
-            'note'    => ['sometimes', 'string'],
+            'room_id'   => ['sometimes', 'exists:rooms,id'],
+            'user_id'   => ['sometimes', 'exists:users,id'],
+            'note'      => ['sometimes', 'nullable', 'string'],
+            'note_code' => ['sometimes', 'integer', 'in:0,1,2'],
+            'logged_at' => ['sometimes', 'nullable', 'date'],
         ];
     }
 }

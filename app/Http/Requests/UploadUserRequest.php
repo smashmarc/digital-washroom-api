@@ -20,9 +20,9 @@ class UploadUserRequest extends FormRequest
             'users.*.email'    => ['required', 'email', Rule::unique('users', 'email')],
             'users.*.username' => ['required', 'string', Rule::unique('users', 'username')],
             'users.*.password' => ['nullable', 'string', 'min:6'],
-            'users.*.roles'    => ['nullable', 'array'],
-            'users.*.roles.*'  => ['string'],
+            'users.*.roles'    => ['nullable', 'array'],          
             'users.*.location' => ['nullable', 'string'],
+            'default_password'=>  ['nullable', 'string', 'min:6'],
         ];
     }
 

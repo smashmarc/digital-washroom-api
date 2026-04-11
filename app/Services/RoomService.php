@@ -71,41 +71,28 @@ class RoomService extends BaseService
 
     public function upload(array $roomsData): array
     {
-        Log::debug("roomsArray", $roomsData);
         $createdRooms = [];
 
         DB::beginTransaction();
         try {
             foreach ($roomsData as $data) {
-                Log::debug("rooms Each", $data);
-                if (!empty($data['location'])) {
-                    $location = Location::where('name', $data['location'])->first();
+                $location = Location::where('name', $data['location'])->first();
+                $data['location_id'] = $location->id;
+                unset($data['location']); // remove string, use resolved ID
 
-                    if (!$location) {
-                        throw new Exception("Location '{$data['location']}' not found.");
-                    }
-
-                    $data['location_id'] = $location->id;
-                }
-                // Create room
-                Log::debug("create data", $data);
-                Log::debug("FINAL DATA BEFORE CREATE", $data);
                 $room = Room::create($data);
                 $createdRooms[] = $room;
             }
 
             DB::commit();
-
-            return $createdRooms; // return all created rooms
+            return $createdRooms;
         } catch (Exception $e) {
             DB::rollBack();
-
-            Log::error('Failed to upload users: ' . $e->getMessage(), [
+            Log::error('Failed to upload rooms: ' . $e->getMessage(), [
                 'data'  => $roomsData,
                 'trace' => $e->getTraceAsString(),
             ]);
-
-            throw $e; // re-throw so the caller can handle it
+            throw $e;
         }
     }
 

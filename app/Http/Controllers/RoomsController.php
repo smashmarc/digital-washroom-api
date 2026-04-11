@@ -13,6 +13,7 @@ use App\Http\Resources\RoomResource;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\CreateRoomRequest;
 use App\Http\Requests\UpdateRoomRequest;
+use App\Http\Requests\UploadRoomRequest;
 use App\Http\Resources\RoomFormOptionsResource;
 
 class RoomsController extends Controller
@@ -136,29 +137,19 @@ class RoomsController extends Controller
         return ApiResponse::success('Room fetched successfully', new RoomResource($room));
     }
 
-    public function upload(Request $request): JsonResponse
+    public function upload(UploadRoomRequest $request): JsonResponse
     {
         // Only allow admins to upload
         Gate::authorize('create', Room::class);
 
-        try {
-            // Validate input: expect an array of users
-            $data = $request->validate([
-                'rooms' => 'required|array|min:1',
-                'rooms.*.name' => 'required|string|max:255',
-                'rooms.*.location' => 'required|string',
-            ]);
-              $roomsData = collect($data['rooms'])->toArray();
-            // Call the service
-            $createdRooms = $this->roomService->upload($roomsData);
+        Gate::authorize('create', Room::class);
 
-            return ApiResponse::success(
-                'Rooms uploaded successfully.',
-                $createdRooms, // optionally wrap in Resource
-                201
-            );
+        try {
+            $createdRooms = $this->roomService->upload($request->validated()['rooms']);
+
+            return ApiResponse::success('Rooms uploaded successfully.', $createdRooms, 201);
         } catch (\Exception $e) {
-            Log::error('Failed to upload users: ' . $e->getMessage(), [
+            Log::error('Failed to upload rooms: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
             return ApiResponse::error(

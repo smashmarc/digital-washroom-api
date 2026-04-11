@@ -25,10 +25,10 @@ class LogService extends BaseService
 
 
     public function create(array $data): LogModel
-    {     
+    {
         try {
-            return LogModel::create($data);        
-        } catch (Exception $e) {          
+            return LogModel::create($data);
+        } catch (Exception $e) {
             Log::error('Failed to create role: ' . $e->getMessage(), [
                 'data' => $data,
                 'trace' => $e->getTraceAsString(),
@@ -37,39 +37,30 @@ class LogService extends BaseService
         }
     }
 
-    public function update(array $data, \App\Models\User $user)
+    public function update(array $data, LogModel $log): LogModel
     {
-        DB::beginTransaction();
-
         try {
-            // Update user fields          
-            $user->update($data);
-            if (isset($data['roles'])) {
-                 $user->syncRoles($data['roles']);
-            }
-                       
-            DB::commit();
-            return $user;
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('UserService update failed: ' . $e->getMessage(), [
+            $log->update($data);
+            return $log;
+        } catch (Exception $e) {
+            Log::error('Failed to update log: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'data' => $data,
-                'user_id' => $user->id,
+                'log_id' => $log->id,
             ]);
-            throw $e; // controller will handle ApiResponse
+            throw $e;
         }
     }
 
-    // public function delete(Role $role): void
-    // {
-    //     try {
-    //         $role->delete();
-    //     } catch (Exception $e) {
-    //         Log::error("Failed to delete role {$role->id}: " . $e->getMessage(), [
-    //             'trace' => $e->getTraceAsString(),
-    //         ]);
-    //         throw $e;
-    //     }
-    // }
+    public function delete(LogModel $log): void
+    {
+        try {
+            $log->delete();
+        } catch (Exception $e) {
+            Log::error("Failed to delete log {$log->id}: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
+        }
+    }
 }

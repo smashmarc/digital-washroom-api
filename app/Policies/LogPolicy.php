@@ -19,7 +19,12 @@ class LogPolicy
             return true;
         }
 
-        return null; 
+        return null;
+    }
+
+    public function update(User $user, Log $model): bool
+    {
+        return $user->hasPermissionTo(PermissionConstant::LOG_UPDATE);
     }
 
     public function view(User $user, Log $model): bool
@@ -29,10 +34,14 @@ class LogPolicy
 
     public function create(User $user): bool
     {
-       
+
         return $user->hasPermissionTo(PermissionConstant::LOG_CREATE);
     }
 
-  
 
+    public function delete(User $user, Log $model): bool
+    {
+
+        return $user->hasPermissionTo(PermissionConstant::LOG_DELETE);
+    }
 }
