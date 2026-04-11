@@ -45,7 +45,7 @@ class LogsController extends Controller
             );
            
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to fetch logs.', 500);
+            return ApiResponse::error('Failed to fetch logs.'.$e->getMessage(), 500);
         }
         
     }
@@ -69,7 +69,7 @@ class LogsController extends Controller
             $updated = $this->logService->update($request->validated(), $log);
             return ApiResponse::success('Log updated successfully', new LogResource($updated));
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to update log.', 500);
+            return ApiResponse::error('Failed to update log.'.$e->getMessage(), 500);
         }
     }
 
@@ -80,7 +80,7 @@ class LogsController extends Controller
             $this->logService->delete($log);
             return ApiResponse::success('Log deleted successfully', null, 200);
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to delete log.', 500);
+            return ApiResponse::error('Failed to delete log.'.$e->getMessage(), 500);
         }
     }
 }
