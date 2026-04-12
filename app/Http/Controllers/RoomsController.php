@@ -35,10 +35,9 @@ class RoomsController extends Controller
             'with',
             'columns',
             'exact'
-        ]);
-        $columns = ['name'];
+        ]);     
         try {
-            $items = $this->roomService->searchPaginatedList($params, $columns);
+            $items = $this->roomService->searchPaginatedList($params);
             return ApiResponse::success(
                 'Location fetched successfully.',
                 $items,
@@ -46,7 +45,7 @@ class RoomsController extends Controller
                 RoomResource::class
             );
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to fetch rooms.', 500);
+            return ApiResponse::error('Failed to fetch rooms.'. $e->getMessage(), 500);
         }
     }
 

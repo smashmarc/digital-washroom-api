@@ -34,9 +34,9 @@ class LogsController extends Controller
             'columns',
             'exact'
         ]);
-        $columns = ['name'];
+        
         try {
-            $items = $this->logService->searchPaginatedList($params, $columns);
+            $items = $this->logService->searchPaginatedList($params);
             return ApiResponse::success(
                 'Logs fetched successfully.',
                 $items,

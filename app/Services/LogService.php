@@ -18,9 +18,30 @@ class LogService extends BaseService
     /**
      * List roles with custom searchable columns.
      */
-    public function searchPaginatedList(array $params = [], $columns = [])
+    public function searchPaginatedList(array $params = [])
     {
-        return parent::list($params, $columns);
+        $params['searchableColumns'] = ['room.name', 'room.location.name', 'user.name', 'note'];
+
+        if (!empty($params['search'])) {
+            $statusMap = [
+                0 => 'not cleaned',
+                1 => 'partially cleaned',
+                2 => 'fully cleaned',
+            ];
+
+            foreach ($statusMap as $code => $label) {
+                  if (strtolower($params['search']) === $label) {
+                    // Add note_code as a searchable column and override search value to the integer
+                    $params['searchableColumns'] = ['note_code'];
+                    $params['search'] = $code;
+                    break;
+                }
+            }
+        }
+
+        Log::debug($params);
+
+        return parent::list($params);
     }
 
 

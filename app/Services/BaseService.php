@@ -35,7 +35,7 @@ abstract class BaseService
      */
     public function list(array $params = [])
     {
-        $searchableColumns = $params['columns'] ?? ['name'];
+        $searchableColumns = $params['searchableColumns'] ?? ['name'];
         $exact = filter_var($params['exact'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         try {
@@ -48,17 +48,41 @@ abstract class BaseService
             }
 
             // Search
-            if (!empty($params['search'])) {
-                // Trim any quotes from frontend
+           if (isset($params['search']) && $params['search'] !== '') {
+
+                Log::debug('not empty:'.$params['search']);
                 $search = trim($params['search'], "'\"");
 
                 $query->where(function ($q) use ($search, $searchableColumns, $exact) {
                     foreach ($searchableColumns as $column) {
-                        if ($exact) {
-                            $q->orWhere($column, '=', $search);
+                        // Check if column is a relationship (e.g. "location.name" or just "location")
+                        if (str_contains($column, '.')) {
+                            $parts = explode('.', $column);
+                            $relColumn = array_pop($parts);       // last part = column (e.g. 'name')
+                            $relations = $parts;                   // remaining = nested relations (e.g. ['room', 'location'])
+
+                            // Safety: only check top-level relation exists on the model
+                            if (!method_exists($this->model, $relations[0])) {
+                                Log::warning("BaseService: relation '{$relations[0]}' does not exist on " . get_class($this->model));
+                                continue;
+                            }
+
+                            // Build nested whereHas: room.location → whereHas('room', fn → whereHas('location', fn → where('name')))
+                            $q->orWhereHas(implode('.', $relations), function ($rel) use ($relColumn, $search, $exact) {
+                                if ($exact) {
+                                    $rel->where($relColumn, '=', $search);
+                                } else {
+                                    $rel->where($relColumn, 'like', "%{$search}%");
+                                }
+                            });
                         } else {
-                            // Partial match
-                            $q->orWhere($column, 'like', "%{$search}%");
+                            $isInteger = is_numeric($search) && intval($search) == $search;
+                            if ($exact || $isInteger) {
+                                Log::debug('iSInteger:'.$isInteger);
+                                $q->orWhere($column, '=', $search);
+                            } else {
+                                $q->orWhere($column, 'like', "%{$search}%");
+                            }
                         }
                     }
                 });
@@ -68,6 +92,11 @@ abstract class BaseService
             $sortBy = $params['sort_by'] ?? 'id';
             $sortDir = $params['sort_dir'] ?? 'asc';
             $query->orderBy($sortBy, $sortDir);
+
+            Log::debug('BaseService SQL: ' . vsprintf(
+    str_replace('?', "'%s'", $query->toSql()),
+    $query->getBindings()
+));
 
             // Pagination
             $perPage = $params['per_page'] ?? 10;
