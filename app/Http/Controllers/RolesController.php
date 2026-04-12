@@ -43,9 +43,9 @@ class RolesController extends Controller
             'per_page',
             'with'
         ]);
-        $columns = ['name'];
+        
         try {
-            $roles = $this->roleService->searchPaginatedList($params, $columns);
+            $roles = $this->roleService->searchPaginatedList($params);
             return ApiResponse::success(
                 'Roles fetched successfully.',
                 $roles,

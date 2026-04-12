@@ -18,9 +18,10 @@ class RoleService extends BaseService
     /**
      * List roles with custom searchable columns.
      */
-    public function searchPaginatedList(array $params = [], $columns=[])
+    public function searchPaginatedList(array $params = [])
     {
-        return parent::list($params, $columns);
+        $params['searchableColumns'] = ['name', 'description'];
+        return parent::list($params);
     }
     
 

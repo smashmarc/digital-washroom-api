@@ -10,6 +10,13 @@ use Illuminate\Support\Facades\Log;
 
 class LogService extends BaseService
 {
+
+    const STATUS_MAP = [
+        0 => 'not cleaned',
+        1 => 'partially cleaned',
+        2 => 'fully cleaned',
+    ];
+
     public function __construct(LogModel $model)
     {
         parent::__construct($model);
@@ -22,28 +29,18 @@ class LogService extends BaseService
     {
         $params['searchableColumns'] = ['room.name', 'room.location.name', 'user.name', 'note'];
 
-        if (!empty($params['search'])) {
-            $statusMap = [
-                0 => 'not cleaned',
-                1 => 'partially cleaned',
-                2 => 'fully cleaned',
-            ];
+        if (isset($params['search']) && $params['search'] !== '') {
+            $code = array_search(strtolower($params['search']), self::STATUS_MAP);
 
-            foreach ($statusMap as $code => $label) {
-                  if (strtolower($params['search']) === $label) {
-                    // Add note_code as a searchable column and override search value to the integer
-                    $params['searchableColumns'] = ['note_code'];
-                    $params['search'] = $code;
-                    break;
-                }
+            if ($code !== false) {
+                $params['searchableColumns'] = ['note_code'];
+                $params['search'] = $code;
+                $params['exact'] = true;
             }
         }
 
-        Log::debug($params);
-
         return parent::list($params);
     }
-
 
     public function create(array $data): LogModel
     {

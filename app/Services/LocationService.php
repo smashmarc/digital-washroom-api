@@ -18,9 +18,10 @@ class LocationService extends BaseService
     /**
      * List roles with custom searchable columns.
      */
-    public function searchPaginatedList(array $params = [], $columns = [])
+    public function searchPaginatedList(array $params = [])
     {
-        return parent::list($params, $columns);
+        $params['searchableColumns'] = ['name', 'address'];
+        return parent::list($params);
     }
 
     

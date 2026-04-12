@@ -33,9 +33,9 @@ class LocationsController extends Controller
             'columns',
             'exact'
         ]);
-        $columns = ['name'];
+       
         try {
-            $items = $this->locationService->searchPaginatedList($params, $columns);
+            $items = $this->locationService->searchPaginatedList($params);
             return ApiResponse::success(
                 'Location fetched successfully.',
                 $items,

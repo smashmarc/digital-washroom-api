@@ -22,7 +22,7 @@ class UserService extends BaseService
      */
     public function searchPaginatedList(array $params = [], $columns = [])
     {
-        $params['columns'] = ['name','username','email'];
+        $params['searchableColumns'] = ['name','username','email','roles.name','location.name'];
         return parent::list($params);
     }
 

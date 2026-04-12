@@ -36,9 +36,9 @@ class PermissionController extends Controller
             'per_page',
             'with'
         ]);
-        $columns = ['name'];
+       
         try {
-            $roles = $this->permissionService->searchPaginatedList($params, $columns);
+            $roles = $this->permissionService->searchPaginatedList($params);
             return ApiResponse::success(
                 'Roles fetched successfully.',
                 $roles,
