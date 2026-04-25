@@ -163,7 +163,7 @@ class BackupService
         if ($driver === 'pgsql') {
             $inner = "PGPASSWORD={$escapedPass} pg_dump -h {$host} -p {$port} -U {$user} {$typeFlag} {$dbname} | gzip > {$outPath}";
         } else {
-            $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --ssl=0 {$typeFlag} {$dbname} | gzip > {$outPath}";
+            $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --skip-ssl {$typeFlag} {$dbname} | gzip > {$outPath}";
         }
 
         // pipefail ensures we get mysqldump's exit code, not gzip's
