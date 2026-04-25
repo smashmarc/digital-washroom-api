@@ -32,7 +32,9 @@ class LogsController extends Controller
             'per_page',
             'with',
             'columns',
-            'exact'
+            'exact',
+            'date_from',
+            'date_to',
         ]);
         
         try {
