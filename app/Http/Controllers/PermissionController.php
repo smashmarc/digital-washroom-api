@@ -10,7 +10,6 @@ use Illuminate\Http\JsonResponse;
 use App\Services\PermissionService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use App\Http\Requests\PermissionRequest;
 use App\Http\Resources\PermissionResource;
 use App\Http\Requests\CreatePermissionRequest;
 
@@ -78,7 +77,7 @@ class PermissionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Permission $permission): JsonResponse
+    public function update(CreatePermissionRequest $request, Permission $permission): JsonResponse
     {
         $permission->update($request->validated());
 
