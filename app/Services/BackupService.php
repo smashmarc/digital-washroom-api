@@ -158,19 +158,27 @@ class BackupService
             default        => '',
         };
 
+        $escapedPass = escapeshellarg($pass);
+
         if ($driver === 'pgsql') {
-            $cmd = "PGPASSWORD='{$pass}' pg_dump -h {$host} -p {$port} -U {$user} {$typeFlag} {$dbname} | gzip > {$outPath} 2>&1";
+            $inner = "PGPASSWORD={$escapedPass} pg_dump -h {$host} -p {$port} -U {$user} {$typeFlag} {$dbname} | gzip > {$outPath}";
         } else {
-            // MySQL / MariaDB
-            $cmd = "mysqldump -h {$host} -P {$port} -u {$user} -p'{$pass}' --ssl=0 {$typeFlag} {$dbname} | gzip > {$outPath} 2>&1";
+            $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --ssl=0 {$typeFlag} {$dbname} | gzip > {$outPath}";
         }
+
+        // pipefail ensures we get mysqldump's exit code, not gzip's
+        $cmd = "bash -c 'set -o pipefail; {$inner}' 2>&1";
 
         $output = [];
         $code   = 0;
         exec($cmd, $output, $code);
 
         if ($code !== 0) {
-            throw new \RuntimeException('Dump command failed (exit ' . $code . '): ' . implode("\n", $output));
+            // Clean up empty file if dump failed
+            if (file_exists($outPath)) {
+                unlink($outPath);
+            }
+            throw new \RuntimeException('Dump failed (exit ' . $code . '): ' . implode("\n", $output));
         }
 
         return implode("\n", $output);
