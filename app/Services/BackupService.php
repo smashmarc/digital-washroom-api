@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\BackupLog;
 use App\Models\BackupSchedule;
-use App\Services\BackupTransferService;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -67,7 +67,8 @@ class BackupService
                 $this->pruneOldBackups($schedule);
             }
 
-             app(BackupTransferService::class)->transferToAll($filename);
+            // TODO: re-enable when transfer destinations are configured
+            // app(BackupTransferService::class)->transferToAll($filename);
         } catch (\Throwable $e) {
             $log->update([
                 'status'        => 'failed',
