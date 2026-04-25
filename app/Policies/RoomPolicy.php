@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\Role;
+use App\Models\Room;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 use App\Constants\PermissionConstant;
@@ -42,7 +42,7 @@ class RoomPolicy
         return $user->hasPermissionTo(PermissionConstant::ROOM_UPDATE);
     }
 
-    public function delete(User $user, User $model): bool
+    public function delete(User $user, Room $model): bool
     {
         return $user->hasPermissionTo(PermissionConstant::ROOM_DELETE);
     }

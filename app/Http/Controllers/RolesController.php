@@ -22,17 +22,6 @@ class RolesController extends Controller
     public function index(Request $request): JsonResponse
     { 
         
-        $user = $request->user()->load('roles.permissions');
-    //     Log::debug('User accessing Role index', [
-    //     'id' => $user->id,
-    //     'name' => $user->name,
-    //     'roles' => $user->roles->pluck('name'),
-    //     'permissions' => $user->roles
-    //         ->flatMap(fn ($role) => $role->permissions->pluck('name'))
-    //         ->unique()
-    //         ->values(),
-    // ]);
-
        if (!Gate::any('view', new \App\Models\Role())){
             abort(403);
        }

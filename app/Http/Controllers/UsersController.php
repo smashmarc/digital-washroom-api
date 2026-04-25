@@ -125,9 +125,14 @@ class UsersController extends Controller
 
     public function destroy(User $user): JsonResponse
     {
-        $user->delete();
-
-        return ApiResponse::success('User deleted successfully', null, 200);
+        Gate::authorize('delete', $user);
+        try {
+            $user->delete();
+            return ApiResponse::success('User deleted successfully', null, 200);
+        } catch (Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to delete user.', 500);
+        }
     }
 
     public function upload(UploadUserRequest $request): JsonResponse
@@ -156,7 +161,7 @@ class UsersController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             return ApiResponse::error(
-                'Something went wrong while uploading users. Please contact your administrator. '. $e->getMessage(),
+                'Something went wrong while uploading users. Please contact your administrator.',
                 500
             );
         }

@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\BackupLog;
 use App\Models\BackupSchedule;
 use App\Services\BackupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class BackupController extends Controller
 {
@@ -21,12 +22,19 @@ class BackupController extends Controller
     /** GET /api/backups/schedules */
     public function schedules(): JsonResponse
     {
-        $schedules = BackupSchedule::with(['logs' => fn($q) => $q->latest()->limit(1)])
-            ->latest()
-            ->get()
-            ->map(fn($s) => $this->formatSchedule($s));
+        try {
+            $schedules = BackupSchedule::with(['logs' => fn($q) => $q->latest()->limit(1)])
+                ->latest()
+                ->get()
+                ->map(fn($s) => $this->formatSchedule($s))
+                ->values()
+                ->all();
 
-        return response()->json(['data' => $schedules]);
+            return ApiResponse::success('Schedules fetched successfully.', $schedules);
+        } catch (\Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to fetch schedules.', 500);
+        }
     }
 
     /** POST /api/backups/schedules */
@@ -42,10 +50,15 @@ class BackupController extends Controller
             'is_active'      => 'boolean',
         ]);
 
-        $schedule = BackupSchedule::create($validated);
-        $schedule->update(['next_run_at' => $schedule->computeNextRun()]);
+        try {
+            $schedule = BackupSchedule::create($validated);
+            $schedule->update(['next_run_at' => $schedule->computeNextRun()]);
 
-        return response()->json(['data' => $this->formatSchedule($schedule)], 201);
+            return ApiResponse::success('Schedule created successfully.', $this->formatSchedule($schedule), 201);
+        } catch (\Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to create schedule.', 500);
+        }
     }
 
     /** PATCH /api/backups/schedules/{id} */
@@ -61,30 +74,45 @@ class BackupController extends Controller
             'is_active'      => 'boolean',
         ]);
 
-        $schedule->update($validated);
-        $schedule->update(['next_run_at' => $schedule->computeNextRun()]);
+        try {
+            $schedule->update($validated);
+            $schedule->update(['next_run_at' => $schedule->computeNextRun()]);
 
-        return response()->json(['data' => $this->formatSchedule($schedule)]);
+            return ApiResponse::success('Schedule updated successfully.', $this->formatSchedule($schedule));
+        } catch (\Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to update schedule.', 500);
+        }
     }
 
     /** DELETE /api/backups/schedules/{id} */
     public function destroySchedule(BackupSchedule $schedule): JsonResponse
     {
-        $schedule->delete();
-        return response()->json(['message' => 'Schedule deleted']);
+        try {
+            $schedule->delete();
+            return ApiResponse::success('Schedule deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to delete schedule.', 500);
+        }
     }
 
-    /** POST /api/backups/schedules/{id}/run  — trigger a scheduled backup immediately */
+    /** POST /api/backups/schedules/{id}/run */
     public function runSchedule(BackupSchedule $schedule): JsonResponse
     {
-        $log = $this->backupService->run(
-            label: $schedule->name . '_manual-trigger',
-            type: $schedule->type,
-            trigger: 'manual',
-            schedule: $schedule
-        );
+        try {
+            $log = $this->backupService->run(
+                label: $schedule->name . '_manual-trigger',
+                type: $schedule->type,
+                trigger: 'manual',
+                schedule: $schedule
+            );
 
-        return response()->json(['data' => $this->formatLog($log)]);
+            return ApiResponse::success('Backup started successfully.', $this->formatLog($log), 201);
+        } catch (\Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to run backup.', 500);
+        }
     }
 
     // ═══════════════════════════════════════════════
@@ -99,13 +127,18 @@ class BackupController extends Controller
             'type'  => 'required|in:full,incremental,schema_only',
         ]);
 
-        $log = $this->backupService->run(
-            label: $validated['label'],
-            type: $validated['type'],
-            trigger: 'manual'
-        );
+        try {
+            $log = $this->backupService->run(
+                label: $validated['label'],
+                type: $validated['type'],
+                trigger: 'manual'
+            );
 
-        return response()->json(['data' => $this->formatLog($log)], 201);
+            return ApiResponse::success('Backup completed.', $this->formatLog($log), 201);
+        } catch (\Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to run backup.', 500);
+        }
     }
 
     // ═══════════════════════════════════════════════
@@ -115,20 +148,20 @@ class BackupController extends Controller
     /** GET /api/backups/logs */
     public function logs(Request $request): JsonResponse
     {
-        $logs = BackupLog::with('schedule')
-            ->when($request->trigger, fn($q, $v) => $q->where('trigger', $v))
-            ->when($request->status,  fn($q, $v) => $q->where('status', $v))
-            ->latest('started_at')
-            ->paginate($request->per_page ?? 20);
+        try {
+            $logs = BackupLog::with('schedule')
+                ->when($request->trigger, fn($q, $v) => $q->where('trigger', $v))
+                ->when($request->status,  fn($q, $v) => $q->where('status', $v))
+                ->latest('started_at')
+                ->paginate($request->per_page ?? 20);
 
-        return response()->json([
-            'data' => $logs->map(fn($l) => $this->formatLog($l)),
-            'meta' => [
-                'total'        => $logs->total(),
-                'current_page' => $logs->currentPage(),
-                'last_page'    => $logs->lastPage(),
-            ],
-        ]);
+            $items = $logs->map(fn($l) => $this->formatLog($l))->values()->all();
+
+            return ApiResponse::success('Logs fetched successfully.', $items);
+        } catch (\Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to fetch logs.', 500);
+        }
     }
 
     // ═══════════════════════════════════════════════
@@ -138,60 +171,70 @@ class BackupController extends Controller
     /** GET /api/backups/files */
     public function files(): JsonResponse
     {
-        return response()->json(['data' => $this->backupService->listFiles()]);
+        try {
+            return ApiResponse::success('Files fetched successfully.', $this->backupService->listFiles());
+        } catch (\Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to fetch backup files.', 500);
+        }
     }
 
     /** DELETE /api/backups/files/{filename} */
     public function deleteFile(string $filename): JsonResponse
     {
-        $deleted = $this->backupService->deleteFile($filename);
+        try {
+            $deleted = $this->backupService->deleteFile($filename);
 
-        if (!$deleted) {
-            return response()->json(['message' => 'File not found'], 404);
+            if (!$deleted) {
+                return ApiResponse::error('File not found.', 404);
+            }
+
+            BackupLog::where('filename', $filename)->update(['filename' => null]);
+
+            return ApiResponse::success('File deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to delete file.', 500);
         }
-
-        // Also mark the log entry
-        BackupLog::where('filename', $filename)->update(['filename' => null]);
-
-        return response()->json(['message' => 'File deleted']);
     }
 
     /** GET /api/backups/files/{filename}/download */
     public function downloadFile(string $filename): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
         $path = $this->backupService->filePath($filename);
-
         abort_unless(file_exists($path), 404, 'Backup file not found');
-
         return response()->download($path, $filename);
     }
 
     // ═══════════════════════════════════════════════
-    //  Stats
+    //  STATS
     // ═══════════════════════════════════════════════
 
     /** GET /api/backups/stats */
     public function stats(): JsonResponse
     {
-        $files       = $this->backupService->listFiles();
-        $totalSize   = collect($files)->sum('size_bytes');
-        $totalBackups = BackupLog::where('status', 'success')->count();
-        $lastBackup  = BackupLog::where('status', 'success')->latest('started_at')->first();
-        $activeSchedules = BackupSchedule::where('is_active', true)->count();
+        try {
+            $files           = $this->backupService->listFiles();
+            $totalSize       = collect($files)->sum('size_bytes');
+            $totalBackups    = BackupLog::where('status', 'success')->count();
+            $lastBackup      = BackupLog::where('status', 'success')->latest('started_at')->first();
+            $activeSchedules = BackupSchedule::where('is_active', true)->count();
 
-        return response()->json([
-            'data' => [
+            return ApiResponse::success('Stats fetched successfully.', [
                 'total_backups'      => $totalBackups,
                 'active_schedules'   => $activeSchedules,
                 'storage_used_bytes' => $totalSize,
                 'storage_used_human' => $this->humanSize($totalSize),
                 'last_backup_at'     => $lastBackup?->started_at?->toISOString(),
                 'last_backup_ago'    => $lastBackup?->started_at?->diffForHumans(),
-            ],
-        ]);
+            ]);
+        } catch (\Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to fetch stats.', 500);
+        }
     }
 
-    // ─── Formatters ─────────────────────────────────
+    // ─── Private formatters ─────────────────────────────────
 
     private function formatSchedule(BackupSchedule $s): array
     {

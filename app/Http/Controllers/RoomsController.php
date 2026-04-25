@@ -57,8 +57,14 @@ class RoomsController extends Controller
      */
     public function store(CreateRoomRequest $request): JsonResponse
     {
-        $room = Room::create($request->validated());
-        return ApiResponse::success('Room created successfully', new RoomResource($room), 201);
+        Gate::authorize('create', Room::class);
+        try {
+            $room = $this->roomService->create($request->validated());
+            return ApiResponse::success('Room created successfully', new RoomResource($room), 201);
+        } catch (Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to create room.', 500);
+        }
     }
 
     /**
@@ -84,20 +90,26 @@ class RoomsController extends Controller
      */
     public function update(UpdateRoomRequest $request, Room $room): JsonResponse
     {
-        $room->update($request->validated());
-        return ApiResponse::success('Room updated successfully', new RoomResource($room));
+        Gate::authorize('update', Room::class);
+        try {
+            $updated = $this->roomService->update($request->validated(), $room);
+            return ApiResponse::success('Room updated successfully', new RoomResource($updated));
+        } catch (Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to update room.', 500);
+        }
     }
 
-    /**
-     * Remove the specified room.
-     *
-     * @param  Room  $room
-     * @return JsonResponse
-     */
     public function destroy(Room $room): JsonResponse
     {
-        $room->delete();
-        return ApiResponse::success('Room deleted successfully', null, 200);
+        Gate::authorize('delete', $room);
+        try {
+            $room->delete();
+            return ApiResponse::success('Room deleted successfully', null, 200);
+        } catch (Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to delete room.', 500);
+        }
     }
 
 
@@ -138,9 +150,6 @@ class RoomsController extends Controller
 
     public function upload(UploadRoomRequest $request): JsonResponse
     {
-        // Only allow admins to upload
-        Gate::authorize('create', Room::class);
-
         Gate::authorize('create', Room::class);
 
         try {

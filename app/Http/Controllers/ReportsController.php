@@ -20,7 +20,7 @@ class ReportsController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        //Gate::authorize('admin');
+        Gate::authorize('view', \App\Models\Log::class);
 
         $params = $request->only([
             'type', 'date_from', 'date_to',
@@ -45,7 +45,7 @@ class ReportsController extends Controller
 
     public function export(Request $request): StreamedResponse
     {
-        //Gate::authorize('admin');
+        Gate::authorize('view', \App\Models\Log::class);
 
         $params = $request->only([
             'type', 'date_from', 'date_to',
