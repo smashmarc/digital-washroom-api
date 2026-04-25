@@ -63,7 +63,7 @@ class RoomsController extends Controller
             return ApiResponse::success('Room created successfully', new RoomResource($room), 201);
         } catch (Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to create room.', 500);
+            return ApiResponse::error('Failed to create room. ' . $e->getMessage(), 500);
         }
     }
 
@@ -96,7 +96,7 @@ class RoomsController extends Controller
             return ApiResponse::success('Room updated successfully', new RoomResource($updated));
         } catch (Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to update room.', 500);
+            return ApiResponse::error('Failed to update room. ' . $e->getMessage(), 500);
         }
     }
 
@@ -108,7 +108,7 @@ class RoomsController extends Controller
             return ApiResponse::success('Room deleted successfully', null, 200);
         } catch (Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to delete room.', 500);
+            return ApiResponse::error('Failed to delete room. ' . $e->getMessage(), 500);
         }
     }
 
@@ -131,7 +131,7 @@ class RoomsController extends Controller
             Log::error(__METHOD__ . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
-            return ApiResponse::error('Failed to fetch Form Options.', 500);
+            return ApiResponse::error('Failed to fetch Form Options. ' . $e->getMessage(), 500);
         }
     }
     /**
@@ -161,7 +161,7 @@ class RoomsController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             return ApiResponse::error(
-                'Something went wrong while uploading rooms. Please contact your administrator.',
+                'Something went wrong while uploading rooms. ' . $e->getMessage(),
                 500
             );
         }

@@ -52,7 +52,7 @@ class UsersController extends Controller
                 UserResource::class
             );
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to fetch roles.', 500);
+            return ApiResponse::error('Failed to fetch roles. ' . $e->getMessage(), 500);
         }
     }
 
@@ -68,7 +68,7 @@ class UsersController extends Controller
                 201
             );
         } catch (Exception $e) {
-            return ApiResponse::error('Something went wrong. please contact your administrator', 500);
+            return ApiResponse::error('Something went wrong. ' . $e->getMessage(), 500);
         }
     }
 
@@ -100,7 +100,7 @@ class UsersController extends Controller
                 new UserResource($updatedUser)
             );
         } catch (\Exception $e) {
-            return ApiResponse::error('Failed to update user.', 500);
+            return ApiResponse::error('Failed to update user. ' . $e->getMessage(), 500);
         }
     }
 
@@ -119,7 +119,7 @@ class UsersController extends Controller
             Log::error(__METHOD__ . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
-            return ApiResponse::error('Failed to fetch Form Options.', 500);
+            return ApiResponse::error('Failed to fetch Form Options. ' . $e->getMessage(), 500);
         }
     }
 
@@ -131,7 +131,7 @@ class UsersController extends Controller
             return ApiResponse::success('User deleted successfully', null, 200);
         } catch (Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to delete user.', 500);
+            return ApiResponse::error('Failed to delete user. ' . $e->getMessage(), 500);
         }
     }
 
@@ -161,7 +161,7 @@ class UsersController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             return ApiResponse::error(
-                'Something went wrong while uploading users. Please contact your administrator.',
+                'Something went wrong while uploading users. ' . $e->getMessage(),
                 500
             );
         }

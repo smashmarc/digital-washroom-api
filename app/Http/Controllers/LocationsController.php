@@ -45,7 +45,7 @@ class LocationsController extends Controller
             );
            
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to fetch roles.', 500);
+            return ApiResponse::error('Failed to fetch roles. ' . $e->getMessage(), 500);
         }
     }
 
@@ -57,7 +57,7 @@ class LocationsController extends Controller
             return ApiResponse::success('Location created successfully.', new LocationResource($item), 201);
         } catch (Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to create location.', 500);
+            return ApiResponse::error('Failed to create location. ' . $e->getMessage(), 500);
         }
     }
     /**
@@ -87,7 +87,7 @@ class LocationsController extends Controller
             return ApiResponse::success('Location updated successfully', new LocationResource($location->fresh()));
         } catch (Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to update location.', 500);
+            return ApiResponse::error('Failed to update location. ' . $e->getMessage(), 500);
         }
     }
 
@@ -99,7 +99,7 @@ class LocationsController extends Controller
             return ApiResponse::success('Location deleted successfully', null, 200);
         } catch (Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to delete location.', 500);
+            return ApiResponse::error('Failed to delete location. ' . $e->getMessage(), 500);
         }
     }
 }

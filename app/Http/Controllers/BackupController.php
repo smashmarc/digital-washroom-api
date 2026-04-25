@@ -33,7 +33,7 @@ class BackupController extends Controller
             return ApiResponse::success('Schedules fetched successfully.', $schedules);
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to fetch schedules.', 500);
+            return ApiResponse::error('Failed to fetch schedules. ' . $e->getMessage(), 500);
         }
     }
 
@@ -57,7 +57,7 @@ class BackupController extends Controller
             return ApiResponse::success('Schedule created successfully.', $this->formatSchedule($schedule), 201);
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to create schedule.', 500);
+            return ApiResponse::error('Failed to create schedule. ' . $e->getMessage(), 500);
         }
     }
 
@@ -81,7 +81,7 @@ class BackupController extends Controller
             return ApiResponse::success('Schedule updated successfully.', $this->formatSchedule($schedule));
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to update schedule.', 500);
+            return ApiResponse::error('Failed to update schedule. ' . $e->getMessage(), 500);
         }
     }
 
@@ -93,7 +93,7 @@ class BackupController extends Controller
             return ApiResponse::success('Schedule deleted successfully.');
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to delete schedule.', 500);
+            return ApiResponse::error('Failed to delete schedule. ' . $e->getMessage(), 500);
         }
     }
 
@@ -111,7 +111,7 @@ class BackupController extends Controller
             return ApiResponse::success('Backup started successfully.', $this->formatLog($log), 201);
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to run backup.', 500);
+            return ApiResponse::error('Failed to run backup. ' . $e->getMessage(), 500);
         }
     }
 
@@ -137,7 +137,7 @@ class BackupController extends Controller
             return ApiResponse::success('Backup completed.', $this->formatLog($log), 201);
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to run backup.', 500);
+            return ApiResponse::error('Failed to run backup. ' . $e->getMessage(), 500);
         }
     }
 
@@ -160,7 +160,7 @@ class BackupController extends Controller
             return ApiResponse::success('Logs fetched successfully.', $items);
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to fetch logs.', 500);
+            return ApiResponse::error('Failed to fetch logs. ' . $e->getMessage(), 500);
         }
     }
 
@@ -175,7 +175,7 @@ class BackupController extends Controller
             return ApiResponse::success('Files fetched successfully.', $this->backupService->listFiles());
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to fetch backup files.', 500);
+            return ApiResponse::error('Failed to fetch backup files. ' . $e->getMessage(), 500);
         }
     }
 
@@ -194,7 +194,7 @@ class BackupController extends Controller
             return ApiResponse::success('File deleted successfully.');
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to delete file.', 500);
+            return ApiResponse::error('Failed to delete file. ' . $e->getMessage(), 500);
         }
     }
 
@@ -230,7 +230,7 @@ class BackupController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to fetch stats.', 500);
+            return ApiResponse::error('Failed to fetch stats. ' . $e->getMessage(), 500);
         }
     }
 

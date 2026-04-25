@@ -46,7 +46,7 @@ class PermissionController extends Controller
                 PermissionResource::class
             );
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to fetch roles.', 500);
+            return ApiResponse::error('Failed to fetch roles. ' . $e->getMessage(), 500);
         }
     }
 
@@ -61,7 +61,7 @@ class PermissionController extends Controller
             return ApiResponse::success('Permission created successfully.', new PermissionResource($permission), 201);
         } catch (Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to create permission.', 500);
+            return ApiResponse::error('Failed to create permission. ' . $e->getMessage(), 500);
         }
     }
 
@@ -87,7 +87,7 @@ class PermissionController extends Controller
             return ApiResponse::success('Permission updated successfully.', new PermissionResource($permission->fresh()));
         } catch (Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to update permission.', 500);
+            return ApiResponse::error('Failed to update permission. ' . $e->getMessage(), 500);
         }
     }
 
@@ -99,7 +99,7 @@ class PermissionController extends Controller
             return ApiResponse::success('Permission deleted successfully.');
         } catch (Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return ApiResponse::error('Failed to delete permission.', 500);
+            return ApiResponse::error('Failed to delete permission. ' . $e->getMessage(), 500);
         }
     }
 }

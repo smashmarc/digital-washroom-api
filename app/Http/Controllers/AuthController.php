@@ -98,9 +98,8 @@ class AuthController extends Controller
 
           
             return ApiResponse::error(
-                'Failed to change password. Please try again.',
-                500,
-                
+                'Failed to change password. ' . $e->getMessage(),
+                500
             );
         }
     }
