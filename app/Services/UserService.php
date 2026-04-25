@@ -6,7 +6,9 @@ use Exception;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Location;
+use App\Constants\Role as RoleConstant;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -29,7 +31,12 @@ class UserService extends BaseService
     public function getFormOptions()
     {
         try {
-            $roles = Role::all();
+            $isAdmin = Auth::user()?->hasRole(RoleConstant::ADMINISTRATOR);
+
+            $roles = Role::when(!$isAdmin, function ($query) {
+                $query->where('name', '!=', RoleConstant::ADMINISTRATOR);
+            })->get();
+
             $locations = Location::all();
             return ['roles' => $roles, 'locations' => $locations];
         } catch (Exception $e) {
