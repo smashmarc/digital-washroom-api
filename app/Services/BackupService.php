@@ -175,11 +175,21 @@ class BackupService
         exec($cmd, $output, $code);
 
         if ($code !== 0) {
-            // Clean up empty file if dump failed
             if (file_exists($outPath)) {
                 unlink($outPath);
             }
-            throw new \RuntimeException('Dump failed (exit ' . $code . '): ' . implode("\n", $output));
+            $errorDetail = implode("\n", $output);
+            Log::error('BackupService::dumpDatabase failed', [
+                'exit_code' => $code,
+                'cmd_output' => $errorDetail,
+                'host'      => $host,
+                'port'      => $port,
+                'driver'    => $driver,
+                'database'  => $dbname,
+                'type'      => $type,
+                'out_path'  => $outPath,
+            ]);
+            throw new \RuntimeException('Dump failed (exit ' . $code . '): ' . $errorDetail);
         }
 
         return implode("\n", $output);
