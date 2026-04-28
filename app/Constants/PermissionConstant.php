@@ -55,6 +55,12 @@ class PermissionConstant
     public const LOG_DELETE = 'logs.delete';
 
     /**
+     * Reports Module
+     */
+    public const REPORT_VIEW   = 'report.view';
+    public const REPORT_EXPORT = 'report.export';
+
+    /**
      * AC Docs Module
      */
     public const ACDOCS_VIEW = 'acdocs.view';
@@ -101,6 +107,10 @@ class PermissionConstant
             self::LOG_CREATE,
             self::LOG_UPDATE,
             self::LOG_DELETE,
+
+            // Reports
+            self::REPORT_VIEW,
+            self::REPORT_EXPORT,
 
             // AC Docs
             self::ACDOCS_VIEW,

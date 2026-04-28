@@ -8,12 +8,14 @@ use App\Models\Room;
 use App\Models\User;
 use App\Models\Location;
 use App\Models\Permission;
+use App\Models\Report;
 use App\Policies\LogPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\RoomPolicy;
 use App\Policies\UserPolicy;
 use App\Policies\LocationPolicy;
 use App\Policies\PermissionPolicy;
+use App\Policies\ReportPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -39,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
          Gate::policy(Permission::class, PermissionPolicy::class);
          Gate::policy(Location::class, LocationPolicy::class);
          Gate::policy(Room::class, RoomPolicy::class);
-         Gate::policy(Log::class, LogPolicy::class);       
+         Gate::policy(Log::class, LogPolicy::class);
+         Gate::policy(Report::class, ReportPolicy::class);
     }
 }

@@ -98,6 +98,7 @@ Route::middleware('auth:api')->group(function () {
      */
     Route::apiResource('locations', LocationsController::class);
     Route::apiResource('rooms', RoomsController::class);
+    Route::get('logs/export', [LogsController::class, 'export']);
     Route::apiResource('logs', LogsController::class);
     Route::apiResource('users', UsersController::class);
     Route::apiResource('permissions', PermissionController::class);

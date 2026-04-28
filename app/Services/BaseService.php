@@ -41,14 +41,14 @@ abstract class BaseService
         }
     }
 
-    private function applyWith($query, array $params): void
+    protected function applyWith($query, array $params): void
     {
         if (!empty($params['with']) && is_array($params['with'])) {
             $query->with($params['with']);
         }
     }
 
-    private function applySearch($query, array $params): void
+    protected function applySearch($query, array $params): void
     {
         if (!isset($params['search']) || $params['search'] === '') return;
 
@@ -66,7 +66,7 @@ abstract class BaseService
         });
     }
 
-    private function applyDateRange($query, array $params): void
+    protected function applyDateRange($query, array $params): void
     {
         if (!empty($params['date_from'])) {
             $query->whereDate('logged_at', '>=', $params['date_from']);
