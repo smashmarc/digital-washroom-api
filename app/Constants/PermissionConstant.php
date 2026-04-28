@@ -55,6 +55,11 @@ class PermissionConstant
     public const LOG_DELETE = 'logs.delete';
 
     /**
+     * AC Docs Module
+     */
+    public const ACDOCS_VIEW = 'acdocs.view';
+
+    /**
      * Return all permissions
      */
     public static function all(): array
@@ -96,6 +101,9 @@ class PermissionConstant
             self::LOG_CREATE,
             self::LOG_UPDATE,
             self::LOG_DELETE,
+
+            // AC Docs
+            self::ACDOCS_VIEW,
         ];
     }
 }

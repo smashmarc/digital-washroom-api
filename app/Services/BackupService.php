@@ -164,7 +164,17 @@ class BackupService
         if ($driver === 'pgsql') {
             $inner = "PGPASSWORD={$escapedPass} pg_dump -h {$host} -p {$port} -U {$user} {$typeFlag} {$dbname} | gzip > {$outPath}";
         } else {
-            $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --ssl-mode=DISABLED {$typeFlag} {$dbname} | gzip > {$outPath}";
+           
+            $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --ssl=0 {$typeFlag} {$dbname} | gzip > {$outPath}";
+
+            // ── Docker / local (no SSL between containers) ──────────────────
+           // $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} {$typeFlag} {$dbname} | gzip > {$outPath}";
+
+            // ── Production / MySQL 8.0+ on bare metal (uncomment if needed) ─
+            // $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --ssl-mode=DISABLED {$typeFlag} {$dbname} | gzip > {$outPath}";
+
+            // ── Production / MySQL 5.7 or MariaDB (uncomment if needed) ─────
+            // $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --skip-ssl {$typeFlag} {$dbname} | gzip > {$outPath}";
         }
 
         // pipefail ensures we get mysqldump's exit code, not gzip's

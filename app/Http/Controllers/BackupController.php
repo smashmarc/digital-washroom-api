@@ -41,20 +41,29 @@ class BackupController extends Controller
     public function storeSchedule(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name'           => 'required|string|max:100',
-            'frequency'      => 'required|in:hourly,every_6h,every_12h,daily,weekly,monthly',
-            'run_at'         => 'nullable|date_format:H:i',
-            'run_day'        => 'nullable|integer|min:0|max:31',
-            'type'           => 'required|in:full,incremental,schema_only',
-            'retention_days' => 'required|integer|min:1|max:365',
-            'is_active'      => 'boolean',
+            'name'               => 'required|string|max:100',
+            'frequency'          => 'required|in:hourly,every_6h,every_12h,daily,weekly,monthly',
+            'run_at'             => 'nullable|regex:/^\d{2}:\d{2}$/',
+            'run_day'            => 'nullable|integer|min:0|max:31',
+            'type'               => 'required|in:full,incremental,schema_only',
+            'retention_days'     => 'required|integer|min:1|max:365',
+            'is_active'          => 'boolean',
+            'utc_offset_minutes' => 'nullable|integer',
         ]);
+
+        if (!empty($validated['run_at'])) {
+            $validated['run_at'] = $this->localRunAtToUtc(
+                $validated['run_at'],
+                (int) ($validated['utc_offset_minutes'] ?? 0)
+            );
+        }
+        unset($validated['utc_offset_minutes']);
 
         try {
             $schedule = BackupSchedule::create($validated);
             $schedule->update(['next_run_at' => $schedule->computeNextRun()]);
 
-            return ApiResponse::success('Schedule created successfully.', $this->formatSchedule($schedule), 201);
+            return ApiResponse::success('Schedule created successfully.', [$this->formatSchedule($schedule)], 201);
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return ApiResponse::error('Failed to create schedule. ' . $e->getMessage(), 500);
@@ -65,20 +74,29 @@ class BackupController extends Controller
     public function updateSchedule(Request $request, BackupSchedule $schedule): JsonResponse
     {
         $validated = $request->validate([
-            'name'           => 'sometimes|string|max:100',
-            'frequency'      => 'sometimes|in:hourly,every_6h,every_12h,daily,weekly,monthly',
-            'run_at'         => 'nullable|date_format:H:i',
-            'run_day'        => 'nullable|integer',
-            'type'           => 'sometimes|in:full,incremental,schema_only',
-            'retention_days' => 'sometimes|integer|min:1|max:365',
-            'is_active'      => 'boolean',
+            'name'               => 'sometimes|string|max:100',
+            'frequency'          => 'sometimes|in:hourly,every_6h,every_12h,daily,weekly,monthly',
+            'run_at'             => 'nullable|regex:/^\d{2}:\d{2}$/',
+            'run_day'            => 'nullable|integer',
+            'type'               => 'sometimes|in:full,incremental,schema_only',
+            'retention_days'     => 'sometimes|integer|min:1|max:365',
+            'is_active'          => 'boolean',
+            'utc_offset_minutes' => 'nullable|integer',
         ]);
+
+        if (!empty($validated['run_at'])) {
+            $validated['run_at'] = $this->localRunAtToUtc(
+                $validated['run_at'],
+                (int) ($validated['utc_offset_minutes'] ?? 0)
+            );
+        }
+        unset($validated['utc_offset_minutes']);
 
         try {
             $schedule->update($validated);
             $schedule->update(['next_run_at' => $schedule->computeNextRun()]);
 
-            return ApiResponse::success('Schedule updated successfully.', $this->formatSchedule($schedule));
+            return ApiResponse::success('Schedule updated successfully.', [$this->formatSchedule($schedule)]);
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return ApiResponse::error('Failed to update schedule. ' . $e->getMessage(), 500);
@@ -108,7 +126,7 @@ class BackupController extends Controller
                 schedule: $schedule
             );
 
-            return ApiResponse::success('Backup started successfully.', $this->formatLog($log), 201);
+            return ApiResponse::success('Backup started successfully.', [$this->formatLog($log)], 201);
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return ApiResponse::error('Failed to run backup. ' . $e->getMessage(), 500);
@@ -134,7 +152,7 @@ class BackupController extends Controller
                 trigger: 'manual'
             );
 
-            return ApiResponse::success('Backup completed.', $this->formatLog($log), 201);
+            return ApiResponse::success('Backup completed.', [$this->formatLog($log)], 201);
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return ApiResponse::error('Failed to run backup. ' . $e->getMessage(), 500);
@@ -161,6 +179,39 @@ class BackupController extends Controller
         } catch (\Exception $e) {
             Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return ApiResponse::error('Failed to fetch logs. ' . $e->getMessage(), 500);
+        }
+    }
+
+    /** DELETE /api/backups/logs/{log} */
+    public function destroyLog(BackupLog $log): JsonResponse
+    {
+        try {
+            $log->delete();
+            return ApiResponse::success('Log deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to delete log. ' . $e->getMessage(), 500);
+        }
+    }
+
+    /** DELETE /api/backups/logs */
+    public function clearLogs(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'trigger' => 'nullable|in:manual,scheduled',
+        ]);
+
+        try {
+            $query = BackupLog::query();
+            if (!empty($validated['trigger'])) {
+                $query->where('trigger', $validated['trigger']);
+            }
+            $count = $query->count();
+            $query->delete();
+            return ApiResponse::success("Cleared {$count} log(s) successfully.");
+        } catch (\Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to clear logs. ' . $e->getMessage(), 500);
         }
     }
 
@@ -281,5 +332,12 @@ class BackupController extends Controller
         if ($bytes >= 1073741824) return round($bytes / 1073741824, 2) . ' GB';
         if ($bytes >= 1048576)    return round($bytes / 1048576, 1)  . ' MB';
         return round($bytes / 1024, 0) . ' KB';
+    }
+
+    private function localRunAtToUtc(string $runAt, int $utcOffsetMinutes): string
+    {
+        return \Carbon\Carbon::createFromFormat('H:i', $runAt)
+            ->subMinutes($utcOffsetMinutes)
+            ->format('H:i');
     }
 }

@@ -83,6 +83,7 @@ class UsersController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
+        Log::debug('userUpdate', $user->toArray());
         Gate::authorize('update', $user);
         $validated = $request->validated();
 
@@ -106,7 +107,7 @@ class UsersController extends Controller
 
     public function getFormOptions()
     {
-        Gate::authorize('update', User::class);
+        Gate::authorize('view', User::class);
         try {
 
             $formOptions = $this->userService->getFormOptions();
@@ -125,6 +126,9 @@ class UsersController extends Controller
 
     public function destroy(User $user): JsonResponse
     {
+        if ($user->id === auth()->id()) {
+            return ApiResponse::error('You cannot delete your own account.', 403);
+        }
         Gate::authorize('delete', $user);
         try {
             $user->delete();
@@ -141,14 +145,15 @@ class UsersController extends Controller
         Gate::authorize('create', User::class);
 
        try {
-        $validated       = $request->validated();
-        $defaultPassword = !empty($validated['default_password'])
-            ? Hash::make($validated['default_password']) // hash once
-            : null;
+        $validated    = $request->validated();
+        $hasOverride  = !empty($validated['default_password']);
+        $overrideHash = $hasOverride ? Hash::make($validated['default_password']) : null;
+        $fallbackHash = $overrideHash ?? Hash::make('Welcome123');
 
-        $usersData = collect($validated['users'])->map(function ($user) use ($defaultPassword) {
-            $user['password'] = $defaultPassword
-                ?? Hash::make($user['password'] ?? 'password'); // hash per row only if no default
+        $usersData = collect($validated['users'])->map(function ($user) use ($hasOverride, $overrideHash, $fallbackHash) {
+            $user['password'] = $hasOverride
+                ? $overrideHash
+                : (!empty($user['password']) ? Hash::make($user['password']) : $fallbackHash);
             return $user;
         })->toArray();
 

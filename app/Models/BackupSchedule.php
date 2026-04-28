@@ -27,16 +27,39 @@ class BackupSchedule extends Model
     /** Compute next_run_at based on frequency and run_at */
     public function computeNextRun(): \Carbon\Carbon
     {
-        $now = now();
+        $now   = now();
+        $runAt = $this->run_at ?? '02:00:00';
 
-        return match ($this->frequency) {
-            'hourly'     => $now->copy()->addHour()->startOfHour(),
-            'every_6h'   => $now->copy()->addHours(6),
-            'every_12h'  => $now->copy()->addHours(12),
-            'daily'      => $now->copy()->addDay()->setTimeFromTimeString($this->run_at ?? '02:00:00'),
-            'weekly'     => $now->copy()->next($this->run_day ?? 0)->setTimeFromTimeString($this->run_at ?? '02:00:00'),
-            'monthly'    => $now->copy()->addMonth()->setDay($this->run_day ?? 1)->setTimeFromTimeString($this->run_at ?? '02:00:00'),
-            default      => $now->copy()->addDay(),
-        };
+        switch ($this->frequency) {
+            case 'hourly':
+                return $now->copy()->addHour()->startOfHour();
+
+            case 'every_6h':
+                return $now->copy()->addHours(6);
+
+            case 'every_12h':
+                return $now->copy()->addHours(12);
+
+            case 'daily': {
+                $candidate = $now->copy()->setTimeFromTimeString($runAt);
+                return $candidate->isFuture() ? $candidate : $candidate->addDay();
+            }
+
+            case 'weekly': {
+                $candidate = $now->copy()->setTimeFromTimeString($runAt);
+                if ($candidate->isFuture() && $candidate->dayOfWeek === ($this->run_day ?? 0)) {
+                    return $candidate;
+                }
+                return $now->copy()->next($this->run_day ?? 0)->setTimeFromTimeString($runAt);
+            }
+
+            case 'monthly': {
+                $candidate = $now->copy()->setDay($this->run_day ?? 1)->setTimeFromTimeString($runAt);
+                return $candidate->isFuture() ? $candidate : $candidate->addMonth();
+            }
+
+            default:
+                return $now->copy()->addDay();
+        }
     }
 }

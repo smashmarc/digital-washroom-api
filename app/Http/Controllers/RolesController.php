@@ -59,7 +59,7 @@ class RolesController extends Controller
 
     public function update(CreateRoleRequest $request, \App\Models\Role $role): JsonResponse
     {
-        Gate::authorize('update', new Role());
+        Gate::authorize('update', $role);
         try {
             $role = $this->roleService->update($request->validated(), $role);
             return ApiResponse::success('Role updated successfully.', new RoleResource($role));
@@ -86,7 +86,7 @@ class RolesController extends Controller
 
     public function destroy(Role $role): JsonResponse
     {
-        Gate::authorize('delete', Role::class);
+        Gate::authorize('delete', $role);
         try {
             $this->roleService->delete($role);
             return ApiResponse::success('Role deleted successfully.');

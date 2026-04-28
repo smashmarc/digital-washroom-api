@@ -15,7 +15,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        Gate::authorize('view', User::class);
+     
 
 
         $locationsCount = Location::count();

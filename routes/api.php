@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\SystemLogController;
 use App\Http\Controllers\BackupDestinationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DevController;
@@ -68,6 +69,8 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/schedules/{schedule}/run',     [BackupController::class, 'runSchedule']);
         Route::post('/run',                          [BackupController::class, 'runManual']);
         Route::get('/logs',                          [BackupController::class, 'logs']);
+        Route::delete('/logs',                       [BackupController::class, 'clearLogs']);
+        Route::delete('/logs/{log}',                 [BackupController::class, 'destroyLog']);
         Route::get('/files',                         [BackupController::class, 'files']);
         Route::delete('/files/{filename}',           [BackupController::class, 'deleteFile']);
         Route::get('/files/{filename}/download',     [BackupController::class, 'downloadFile']);
@@ -84,6 +87,11 @@ Route::middleware('auth:api')->group(function () {
 
 
 
+
+    Route::prefix('system-log')->group(function () {
+        Route::get('/', [SystemLogController::class, 'index']);
+        Route::delete('/', [SystemLogController::class, 'clear']);
+    });
 
     /**
      * Route Resource should be in Bottom to avoid overriding

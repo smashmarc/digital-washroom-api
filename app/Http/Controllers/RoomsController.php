@@ -26,7 +26,7 @@ class RoomsController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        Gate::authorize('view', Room::class);
+        Gate::authorize('view', new Room());
         $params = $request->only([
             'search',
             'sort_by',
@@ -35,7 +35,7 @@ class RoomsController extends Controller
             'with',
             'columns',
             'exact'
-        ]);     
+        ]);
         try {
             $items = $this->roomService->searchPaginatedList($params);
             return ApiResponse::success(
@@ -45,7 +45,7 @@ class RoomsController extends Controller
                 RoomResource::class
             );
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to fetch rooms.'. $e->getMessage(), 500);
+            return ApiResponse::error('Failed to fetch rooms.' . $e->getMessage(), 500);
         }
     }
 
@@ -75,7 +75,7 @@ class RoomsController extends Controller
      */
     public function show(Room $room): JsonResponse
     {
-        Gate::authorize('view', Room::class);
+        Gate::authorize('view', $room);
         $room->load(['location', 'logs.user']);
 
         return ApiResponse::success('Room fetched successfully', new RoomResource($room));
@@ -90,7 +90,7 @@ class RoomsController extends Controller
      */
     public function update(UpdateRoomRequest $request, Room $room): JsonResponse
     {
-        Gate::authorize('update', Room::class);
+        Gate::authorize('update', $room);
         try {
             $updated = $this->roomService->update($request->validated(), $room);
             return ApiResponse::success('Room updated successfully', new RoomResource($updated));
