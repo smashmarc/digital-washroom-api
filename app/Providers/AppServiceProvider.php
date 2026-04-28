@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Backup;
 use App\Models\Log;
 use App\Models\Role;
 use App\Models\Room;
@@ -9,6 +10,7 @@ use App\Models\User;
 use App\Models\Location;
 use App\Models\Permission;
 use App\Models\Report;
+use App\Policies\BackupPolicy;
 use App\Policies\LogPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\RoomPolicy;
@@ -43,5 +45,6 @@ class AppServiceProvider extends ServiceProvider
          Gate::policy(Room::class, RoomPolicy::class);
          Gate::policy(Log::class, LogPolicy::class);
          Gate::policy(Report::class, ReportPolicy::class);
+         Gate::policy(Backup::class, BackupPolicy::class);
     }
 }

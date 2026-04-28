@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Models\Backup;
 use App\Models\BackupLog;
 use App\Models\BackupSchedule;
 use App\Services\BackupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
 class BackupController extends Controller
@@ -22,6 +24,7 @@ class BackupController extends Controller
     /** GET /api/backups/schedules */
     public function schedules(): JsonResponse
     {
+        Gate::authorize('view', Backup::class);
         try {
             $schedules = BackupSchedule::with(['logs' => fn($q) => $q->latest()->limit(1)])
                 ->latest()
@@ -40,6 +43,7 @@ class BackupController extends Controller
     /** POST /api/backups/schedules */
     public function storeSchedule(Request $request): JsonResponse
     {
+        Gate::authorize('create', Backup::class);
         $validated = $request->validate([
             'name'               => 'required|string|max:100',
             'frequency'          => 'required|in:hourly,every_6h,every_12h,daily,weekly,monthly',
@@ -73,6 +77,7 @@ class BackupController extends Controller
     /** PATCH /api/backups/schedules/{id} */
     public function updateSchedule(Request $request, BackupSchedule $schedule): JsonResponse
     {
+        Gate::authorize('create', Backup::class);
         $validated = $request->validate([
             'name'               => 'sometimes|string|max:100',
             'frequency'          => 'sometimes|in:hourly,every_6h,every_12h,daily,weekly,monthly',
@@ -106,6 +111,7 @@ class BackupController extends Controller
     /** DELETE /api/backups/schedules/{id} */
     public function destroySchedule(BackupSchedule $schedule): JsonResponse
     {
+        Gate::authorize('delete', Backup::class);
         try {
             $schedule->delete();
             return ApiResponse::success('Schedule deleted successfully.');
@@ -118,6 +124,7 @@ class BackupController extends Controller
     /** POST /api/backups/schedules/{id}/run */
     public function runSchedule(BackupSchedule $schedule): JsonResponse
     {
+        Gate::authorize('create', Backup::class);
         try {
             $log = $this->backupService->run(
                 label: $schedule->name . '_manual-trigger',
@@ -140,6 +147,7 @@ class BackupController extends Controller
     /** POST /api/backups/run */
     public function runManual(Request $request): JsonResponse
     {
+        Gate::authorize('create', Backup::class);
         $validated = $request->validate([
             'label' => 'required|string|max:100',
             'type'  => 'required|in:full,incremental,schema_only',
@@ -166,6 +174,7 @@ class BackupController extends Controller
     /** GET /api/backups/logs */
     public function logs(Request $request): JsonResponse
     {
+        Gate::authorize('view', Backup::class);
         try {
             $logs = BackupLog::with('schedule')
                 ->when($request->trigger, fn($q, $v) => $q->where('trigger', $v))
@@ -185,6 +194,7 @@ class BackupController extends Controller
     /** DELETE /api/backups/logs/{log} */
     public function destroyLog(BackupLog $log): JsonResponse
     {
+        Gate::authorize('delete', Backup::class);
         try {
             $log->delete();
             return ApiResponse::success('Log deleted successfully.');
@@ -197,6 +207,7 @@ class BackupController extends Controller
     /** DELETE /api/backups/logs */
     public function clearLogs(Request $request): JsonResponse
     {
+        Gate::authorize('delete', Backup::class);
         $validated = $request->validate([
             'trigger' => 'nullable|in:manual,scheduled',
         ]);
@@ -222,6 +233,7 @@ class BackupController extends Controller
     /** GET /api/backups/files */
     public function files(): JsonResponse
     {
+        Gate::authorize('view', Backup::class);
         try {
             return ApiResponse::success('Files fetched successfully.', $this->backupService->listFiles());
         } catch (\Exception $e) {
@@ -233,6 +245,7 @@ class BackupController extends Controller
     /** DELETE /api/backups/files/{filename} */
     public function deleteFile(string $filename): JsonResponse
     {
+        Gate::authorize('fileDelete', Backup::class);
         try {
             $deleted = $this->backupService->deleteFile($filename);
 
@@ -252,6 +265,7 @@ class BackupController extends Controller
     /** GET /api/backups/files/{filename}/download */
     public function downloadFile(string $filename): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
+        Gate::authorize('download', Backup::class);
         $path = $this->backupService->filePath($filename);
         abort_unless(file_exists($path), 404, 'Backup file not found');
         return response()->download($path, $filename);
@@ -264,6 +278,7 @@ class BackupController extends Controller
     /** GET /api/backups/stats */
     public function stats(): JsonResponse
     {
+        Gate::authorize('view', Backup::class);
         try {
             $files           = $this->backupService->listFiles();
             $totalSize       = collect($files)->sum('size_bytes');

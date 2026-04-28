@@ -61,6 +61,15 @@ class PermissionConstant
     public const REPORT_EXPORT = 'report.export';
 
     /**
+     * Backup Module
+     */
+    public const BACKUP_VIEW        = 'backup.view';
+    public const BACKUP_CREATE      = 'backup.create';
+    public const BACKUP_DELETE      = 'backup.delete';
+    public const BACKUP_DOWNLOAD    = 'backup.download';
+    public const BACKUP_FILE_DELETE = 'backup.file-delete';
+
+    /**
      * AC Docs Module
      */
     public const ACDOCS_VIEW = 'acdocs.view';
@@ -111,6 +120,13 @@ class PermissionConstant
             // Reports
             self::REPORT_VIEW,
             self::REPORT_EXPORT,
+
+            // Backups
+            self::BACKUP_VIEW,
+            self::BACKUP_CREATE,
+            self::BACKUP_DELETE,
+            self::BACKUP_DOWNLOAD,
+            self::BACKUP_FILE_DELETE,
 
             // AC Docs
             self::ACDOCS_VIEW,
