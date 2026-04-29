@@ -19,7 +19,8 @@ class RunScheduledBackups extends Command
 
     public function handle(): int
     {
-        Log::info('backup:run-scheduled fired', ['time' => now()->toDateTimeString()]);
+        //uncomment if needed 
+       // Log::info('backup:run-scheduled fired', ['time' => now()->toDateTimeString()]);
 
         $due = BackupSchedule::where('is_active', true)
             ->where(fn($q) =>
@@ -29,8 +30,8 @@ class RunScheduledBackups extends Command
             ->get();
 
         if ($due->isEmpty()) {
-            Log::info('backup:run-scheduled — no schedules due.');
-            $this->info('No scheduled backups are due.');
+            //Log::info('backup:run-scheduled — no schedules due.');
+           // $this->info('No scheduled backups are due.');
             return self::SUCCESS;
         }
 
