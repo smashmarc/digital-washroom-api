@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\BackupLog;
 use App\Models\BackupSchedule;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -78,7 +77,11 @@ class BackupService
             ]);
 
             if ($schedule) {
-                $schedule->update(['last_status' => 'failed']);
+                $schedule->update([
+                    'last_run_at' => now(),
+                    'last_status' => 'failed',
+                    'next_run_at' => $schedule->computeNextRun(),
+                ]);
             }
         }
 
@@ -164,14 +167,14 @@ class BackupService
         if ($driver === 'pgsql') {
             $inner = "PGPASSWORD={$escapedPass} pg_dump -h {$host} -p {$port} -U {$user} {$typeFlag} {$dbname} | gzip > {$outPath}";
         } else {
-           
-            $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --ssl=0 {$typeFlag} {$dbname} | gzip > {$outPath}";
+           //on local dev mysql8.3
+            //$inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --ssl=0 {$typeFlag} {$dbname} | gzip > {$outPath}";
 
             // ── Docker / local (no SSL between containers) ──────────────────
            // $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} {$typeFlag} {$dbname} | gzip > {$outPath}";
 
-            // ── Production / MySQL 8.0+ on bare metal (uncomment if needed) ─
-            // $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --ssl-mode=DISABLED {$typeFlag} {$dbname} | gzip > {$outPath}";
+            // ── Production / MySQL 8.4+ on bare metal (uncomment if needed) ─
+             $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --ssl-mode=DISABLED {$typeFlag} {$dbname} | gzip > {$outPath}";
 
             // ── Production / MySQL 5.7 or MariaDB (uncomment if needed) ─────
             // $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --skip-ssl {$typeFlag} {$dbname} | gzip > {$outPath}";
