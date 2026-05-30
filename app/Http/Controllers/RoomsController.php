@@ -26,7 +26,7 @@ class RoomsController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        Gate::authorize('view', Room::class);
+        Gate::authorize('view', new Room());
         $params = $request->only([
             'search',
             'sort_by',
@@ -35,7 +35,7 @@ class RoomsController extends Controller
             'with',
             'columns',
             'exact'
-        ]);     
+        ]);
         try {
             $items = $this->roomService->searchPaginatedList($params);
             return ApiResponse::success(
@@ -45,7 +45,7 @@ class RoomsController extends Controller
                 RoomResource::class
             );
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to fetch rooms.'. $e->getMessage(), 500);
+            return ApiResponse::error('Failed to fetch rooms.' . $e->getMessage(), 500);
         }
     }
 
@@ -57,8 +57,14 @@ class RoomsController extends Controller
      */
     public function store(CreateRoomRequest $request): JsonResponse
     {
-        $room = Room::create($request->validated());
-        return ApiResponse::success('Room created successfully', new RoomResource($room), 201);
+        Gate::authorize('create', Room::class);
+        try {
+            $room = $this->roomService->create($request->validated());
+            return ApiResponse::success('Room created successfully', new RoomResource($room), 201);
+        } catch (Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to create room. ' . $e->getMessage(), 500);
+        }
     }
 
     /**
@@ -69,7 +75,7 @@ class RoomsController extends Controller
      */
     public function show(Room $room): JsonResponse
     {
-        Gate::authorize('view', Room::class);
+        Gate::authorize('view', $room);
         $room->load(['location', 'logs.user']);
 
         return ApiResponse::success('Room fetched successfully', new RoomResource($room));
@@ -84,20 +90,26 @@ class RoomsController extends Controller
      */
     public function update(UpdateRoomRequest $request, Room $room): JsonResponse
     {
-        $room->update($request->validated());
-        return ApiResponse::success('Room updated successfully', new RoomResource($room));
+        Gate::authorize('update', $room);
+        try {
+            $updated = $this->roomService->update($request->validated(), $room);
+            return ApiResponse::success('Room updated successfully', new RoomResource($updated));
+        } catch (Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to update room. ' . $e->getMessage(), 500);
+        }
     }
 
-    /**
-     * Remove the specified room.
-     *
-     * @param  Room  $room
-     * @return JsonResponse
-     */
     public function destroy(Room $room): JsonResponse
     {
-        $room->delete();
-        return ApiResponse::success('Room deleted successfully', null, 200);
+        Gate::authorize('delete', $room);
+        try {
+            $room->delete();
+            return ApiResponse::success('Room deleted successfully', null, 200);
+        } catch (Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to delete room. ' . $e->getMessage(), 500);
+        }
     }
 
 
@@ -119,7 +131,7 @@ class RoomsController extends Controller
             Log::error(__METHOD__ . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
-            return ApiResponse::error('Failed to fetch Form Options.', 500);
+            return ApiResponse::error('Failed to fetch Form Options. ' . $e->getMessage(), 500);
         }
     }
     /**
@@ -138,9 +150,6 @@ class RoomsController extends Controller
 
     public function upload(UploadRoomRequest $request): JsonResponse
     {
-        // Only allow admins to upload
-        Gate::authorize('create', Room::class);
-
         Gate::authorize('create', Room::class);
 
         try {
@@ -152,7 +161,7 @@ class RoomsController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             return ApiResponse::error(
-                'Something went wrong while uploading rooms. Please contact your administrator.',
+                'Something went wrong while uploading rooms. ' . $e->getMessage(),
                 500
             );
         }

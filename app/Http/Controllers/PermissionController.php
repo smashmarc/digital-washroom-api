@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use App\Services\PermissionService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use App\Http\Resources\PermissionResource;
 use App\Http\Requests\CreatePermissionRequest;
 
@@ -45,7 +46,7 @@ class PermissionController extends Controller
                 PermissionResource::class
             );
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to fetch roles.', 500);
+            return ApiResponse::error('Failed to fetch roles. ' . $e->getMessage(), 500);
         }
     }
 
@@ -54,13 +55,14 @@ class PermissionController extends Controller
      */
     public function store(CreatePermissionRequest $request): JsonResponse
     {
-        $permission = Permission::create($request->validated());
-
-        return ApiResponse::success(
-            'Permission created successfully.',
-            new PermissionResource($permission),
-            201
-        );
+        Gate::authorize('manage', Permission::class);
+        try {
+            $permission = $this->permissionService->create($request->validated());
+            return ApiResponse::success('Permission created successfully.', new PermissionResource($permission), 201);
+        } catch (Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to create permission. ' . $e->getMessage(), 500);
+        }
     }
 
     /**
@@ -79,21 +81,25 @@ class PermissionController extends Controller
      */
     public function update(CreatePermissionRequest $request, Permission $permission): JsonResponse
     {
-        $permission->update($request->validated());
-
-        return ApiResponse::success(
-            'Permission updated successfully.',
-            new PermissionResource($permission)
-        );
+        Gate::authorize('manage', Permission::class);
+        try {
+            $this->permissionService->update($permission->id, $request->validated());
+            return ApiResponse::success('Permission updated successfully.', new PermissionResource($permission->fresh()));
+        } catch (Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to update permission. ' . $e->getMessage(), 500);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Permission $permission): JsonResponse
     {
-        $permission->delete();
-
-        return ApiResponse::success('Permission deleted successfully.');
+        Gate::authorize('manage', Permission::class);
+        try {
+            $this->permissionService->delete($permission->id);
+            return ApiResponse::success('Permission deleted successfully.');
+        } catch (Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to delete permission. ' . $e->getMessage(), 500);
+        }
     }
 }

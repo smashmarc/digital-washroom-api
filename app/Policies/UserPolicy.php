@@ -2,10 +2,9 @@
 
 namespace App\Policies;
 
-use App\Models\Role;
-use App\Models\User;
 use App\Constants\PermissionConstant;
 use App\Constants\Role as RoleConstant;
+use App\Models\User;
 
 class UserPolicy
 {
@@ -30,17 +29,22 @@ class UserPolicy
         return $user->hasPermissionTo(PermissionConstant::USER_CREATE);
     }
 
-    public function update(User $user): bool
+    public function update(User $user, ?User $model = null): bool
     {
-        // if ($user->hasPermissionTo(PermissionConstant::USER_UPDATE)) {
-        //     return $model->id === $user->id;
-        // }   
-        //return false;
+        if ($model?->hasRole(RoleConstant::ADMINISTRATOR)) {
+            return false;
+        }
         return $user->hasPermissionTo(PermissionConstant::USER_UPDATE);
     }
 
-    public function delete(User $user): bool
+    public function delete(User $user, User $model): bool
     {
+        if ($user->id === $model->id) {
+            return false;
+        }
+        if ($model->hasRole(RoleConstant::ADMINISTRATOR)) {
+            return false;
+        }
         return $user->hasPermissionTo(PermissionConstant::USER_DELETE);
     }
 }

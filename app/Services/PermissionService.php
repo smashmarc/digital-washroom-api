@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use Spatie\Permission\Models\Permission;
-use App\Helpers\ApiResponse;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class PermissionService extends BaseService
 
@@ -30,8 +28,9 @@ class PermissionService extends BaseService
     public function create(array $data)
     {
         $permission = Permission::create([
-            'name' => $data['name'],
-            'guard_name' => $data['guard_name'] ?? 'api',
+            'name'        => $data['name'],
+            'guard_name'  => $data['guard_name'] ?? 'api',
+            'description' => $data['description'] ?? null,
         ]);
 
         return $permission;
@@ -49,8 +48,9 @@ class PermissionService extends BaseService
         if (!$permission) return null;
 
         $permission->update([
-            'name' => $data['name'] ?? $permission->name,
-            'guard_name' => $data['guard_name'] ?? $permission->guard_name,
+            'name'        => $data['name'] ?? $permission->name,
+            'guard_name'  => $data['guard_name'] ?? $permission->guard_name,
+            'description' => array_key_exists('description', $data) ? $data['description'] : $permission->description,
         ]);
 
         return $permission;

@@ -34,7 +34,17 @@ class AuthController extends Controller
      */
     public function me()
     {
-        return ApiResponse::success('User profile', auth()->user());
+        $user = auth()->user();
+
+        return ApiResponse::success('User profile', (object) [
+            'id'                    => $user->id,
+            'name'                  => $user->name,
+            'email'                 => $user->email,
+            'username'              => $user->username,
+            'force_password_change' => $user->force_password_change,
+            'roles'                 => $user->getRoleNames()->toArray(),
+            'permissions'           => $user->getAllPermissions()->pluck('name')->toArray(),
+        ]);
     }
 
     /**
@@ -98,9 +108,8 @@ class AuthController extends Controller
 
           
             return ApiResponse::error(
-                'Failed to change password. Please try again.',
-                500,
-                
+                'Failed to change password. ' . $e->getMessage(),
+                500
             );
         }
     }

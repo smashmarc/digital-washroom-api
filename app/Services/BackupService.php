@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\BackupLog;
 use App\Models\BackupSchedule;
 
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -77,7 +77,11 @@ class BackupService
             ]);
 
             if ($schedule) {
-                $schedule->update(['last_status' => 'failed']);
+                $schedule->update([
+                    'last_run_at' => now(),
+                    'last_status' => 'failed',
+                    'next_run_at' => $schedule->computeNextRun(),
+                ]);
             }
         }
 
@@ -158,19 +162,47 @@ class BackupService
             default        => '',
         };
 
+        $escapedPass = escapeshellarg($pass);
+
         if ($driver === 'pgsql') {
-            $cmd = "PGPASSWORD='{$pass}' pg_dump -h {$host} -p {$port} -U {$user} {$typeFlag} {$dbname} | gzip > {$outPath} 2>&1";
+            $inner = "PGPASSWORD={$escapedPass} pg_dump -h {$host} -p {$port} -U {$user} {$typeFlag} {$dbname} | gzip > {$outPath}";
         } else {
-            // MySQL / MariaDB
-            $cmd = "mysqldump -h {$host} -P {$port} -u {$user} -p'{$pass}' --ssl=0 {$typeFlag} {$dbname} | gzip > {$outPath} 2>&1";
+           //on local dev mysql8.3
+            //$inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --ssl=0 {$typeFlag} {$dbname} | gzip > {$outPath}";
+
+            // ── Docker / local (no SSL between containers) ──────────────────
+           // $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} {$typeFlag} {$dbname} | gzip > {$outPath}";
+
+            // ── Production / MySQL 8.4+ on bare metal (uncomment if needed) ─
+             $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --ssl-mode=DISABLED {$typeFlag} {$dbname} | gzip > {$outPath}";
+
+            // ── Production / MySQL 5.7 or MariaDB (uncomment if needed) ─────
+            // $inner = "mysqldump -h {$host} -P {$port} -u {$user} -p{$escapedPass} --skip-ssl {$typeFlag} {$dbname} | gzip > {$outPath}";
         }
+
+        // pipefail ensures we get mysqldump's exit code, not gzip's
+        $cmd = "bash -c 'set -o pipefail; {$inner}' 2>&1";
 
         $output = [];
         $code   = 0;
         exec($cmd, $output, $code);
 
         if ($code !== 0) {
-            throw new \RuntimeException('Dump command failed (exit ' . $code . '): ' . implode("\n", $output));
+            if (file_exists($outPath)) {
+                unlink($outPath);
+            }
+            $errorDetail = implode("\n", $output);
+            Log::error('BackupService::dumpDatabase failed', [
+                'exit_code' => $code,
+                'cmd_output' => $errorDetail,
+                'host'      => $host,
+                'port'      => $port,
+                'driver'    => $driver,
+                'database'  => $dbname,
+                'type'      => $type,
+                'out_path'  => $outPath,
+            ]);
+            throw new \RuntimeException('Dump failed (exit ' . $code . '): ' . $errorDetail);
         }
 
         return implode("\n", $output);

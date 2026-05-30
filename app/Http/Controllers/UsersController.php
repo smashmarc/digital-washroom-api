@@ -52,7 +52,7 @@ class UsersController extends Controller
                 UserResource::class
             );
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to fetch roles.', 500);
+            return ApiResponse::error('Failed to fetch roles. ' . $e->getMessage(), 500);
         }
     }
 
@@ -68,7 +68,7 @@ class UsersController extends Controller
                 201
             );
         } catch (Exception $e) {
-            return ApiResponse::error('Something went wrong. please contact your administrator', 500);
+            return ApiResponse::error('Something went wrong. ' . $e->getMessage(), 500);
         }
     }
 
@@ -83,6 +83,7 @@ class UsersController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
+        Log::debug('userUpdate', $user->toArray());
         Gate::authorize('update', $user);
         $validated = $request->validated();
 
@@ -100,13 +101,13 @@ class UsersController extends Controller
                 new UserResource($updatedUser)
             );
         } catch (\Exception $e) {
-            return ApiResponse::error('Failed to update user.', 500);
+            return ApiResponse::error('Failed to update user. ' . $e->getMessage(), 500);
         }
     }
 
     public function getFormOptions()
     {
-        Gate::authorize('update', User::class);
+        Gate::authorize('view', User::class);
         try {
 
             $formOptions = $this->userService->getFormOptions();
@@ -119,15 +120,23 @@ class UsersController extends Controller
             Log::error(__METHOD__ . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
-            return ApiResponse::error('Failed to fetch Form Options.', 500);
+            return ApiResponse::error('Failed to fetch Form Options. ' . $e->getMessage(), 500);
         }
     }
 
     public function destroy(User $user): JsonResponse
     {
-        $user->delete();
-
-        return ApiResponse::success('User deleted successfully', null, 200);
+        if ($user->id === auth()->id()) {
+            return ApiResponse::error('You cannot delete your own account.', 403);
+        }
+        Gate::authorize('delete', $user);
+        try {
+            $user->delete();
+            return ApiResponse::success('User deleted successfully', null, 200);
+        } catch (Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to delete user. ' . $e->getMessage(), 500);
+        }
     }
 
     public function upload(UploadUserRequest $request): JsonResponse
@@ -136,14 +145,15 @@ class UsersController extends Controller
         Gate::authorize('create', User::class);
 
        try {
-        $validated       = $request->validated();
-        $defaultPassword = !empty($validated['default_password'])
-            ? Hash::make($validated['default_password']) // hash once
-            : null;
+        $validated    = $request->validated();
+        $hasOverride  = !empty($validated['default_password']);
+        $overrideHash = $hasOverride ? Hash::make($validated['default_password']) : null;
+        $fallbackHash = $overrideHash ?? Hash::make('Welcome123');
 
-        $usersData = collect($validated['users'])->map(function ($user) use ($defaultPassword) {
-            $user['password'] = $defaultPassword
-                ?? Hash::make($user['password'] ?? 'password'); // hash per row only if no default
+        $usersData = collect($validated['users'])->map(function ($user) use ($hasOverride, $overrideHash, $fallbackHash) {
+            $user['password'] = $hasOverride
+                ? $overrideHash
+                : (!empty($user['password']) ? Hash::make($user['password']) : $fallbackHash);
             return $user;
         })->toArray();
 
@@ -156,7 +166,7 @@ class UsersController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             return ApiResponse::error(
-                'Something went wrong while uploading users. Please contact your administrator. '. $e->getMessage(),
+                'Something went wrong while uploading users. ' . $e->getMessage(),
                 500
             );
         }

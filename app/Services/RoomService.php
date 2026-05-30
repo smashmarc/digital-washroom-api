@@ -28,12 +28,12 @@ class RoomService extends BaseService
 
 
 
-    public function create(array $data): Location
+    public function create(array $data): Room
     {
         try {
-            return Location::create($data);
+            return Room::create($data);
         } catch (Exception $e) {
-            Log::error('Failed to create role: ' . $e->getMessage(), [
+            Log::error('Failed to create room: ' . $e->getMessage(), [
                 'data' => $data,
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -41,17 +41,16 @@ class RoomService extends BaseService
         }
     }
 
-    public function update(array $data, Location $model)
+    public function update(array $data, Room $room): Room
     {
         try {
-
-            return $model->update($data);
+            $room->update($data);
+            return $room->fresh();
         } catch (\Exception $e) {
-
-            Log::error('UserService update failed: ' . $e->getMessage(), [
+            Log::error('RoomService update failed: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'data' => $data,
-                'user_id' => $model->id,
+                'room_id' => $room->id,
             ]);
             throw $e;
         }

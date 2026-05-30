@@ -6,6 +6,7 @@ use App\Helpers\ApiResponse;
 use App\Services\LogService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use App\Http\Resources\LogResource;
 use App\Http\Controllers\Controller;
@@ -84,5 +85,32 @@ class LogsController extends Controller
         } catch (Exception $e) {
             return ApiResponse::error('Failed to delete log.'.$e->getMessage(), 500);
         }
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        Gate::authorize('export', Log::class);
+
+        $params = $request->only(['search', 'date_from', 'date_to', 'sort_dir']);
+        $logs   = $this->logService->exportAll($params);
+
+        $statusMap = [0 => 'Not Cleaned', 1 => 'Partially Cleaned', 2 => 'Fully Cleaned'];
+        $filename  = 'logs_' . now()->format('Y-m-d') . '.csv';
+
+        return response()->streamDownload(function () use ($logs, $statusMap) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Location', 'Room', 'User', 'Status', 'Note', 'Logged At']);
+            foreach ($logs as $log) {
+                fputcsv($handle, [
+                    $log->room?->location?->name ?? '—',
+                    $log->room?->name            ?? '—',
+                    $log->user?->name            ?? '—',
+                    $statusMap[$log->note_code]  ?? 'Unknown',
+                    $log->note                   ?? '',
+                    $log->logged_at              ?? '',
+                ]);
+            }
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv']);
     }
 }

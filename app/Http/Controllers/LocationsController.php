@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Services\LocationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use App\Http\Resources\LocationResource;
 use App\Http\Requests\CreateLocationRequest;
 use App\Http\Requests\UpdateLocationRequest;
@@ -44,23 +45,19 @@ class LocationsController extends Controller
             );
            
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to fetch roles.', 500);
+            return ApiResponse::error('Failed to fetch roles. ' . $e->getMessage(), 500);
         }
     }
 
     public function store(CreateLocationRequest $request): JsonResponse
     {
-        //Gate::authorize('create', User::class);
+        Gate::authorize('create', new Location());
         try {
             $item = $this->locationService->create($request->validated());
-            return ApiResponse::success(
-                'Location created successfully.',
-                new LocationResource($item),
-                201,
-                null
-            );
+            return ApiResponse::success('Location created successfully.', new LocationResource($item), 201);
         } catch (Exception $e) {
-            return ApiResponse::error('Something went wrong. please contact your administrator', 500);
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to create location. ' . $e->getMessage(), 500);
         }
     }
     /**
@@ -84,22 +81,25 @@ class LocationsController extends Controller
      */
     public function update(UpdateLocationRequest $request, Location $location): JsonResponse
     {
-        $location->update($request->validated());
-
-        return ApiResponse::success('Location updated successfully', new LocationResource($location));
+        Gate::authorize('update', $location);
+        try {
+            $this->locationService->update($request->validated(), $location);
+            return ApiResponse::success('Location updated successfully', new LocationResource($location->fresh()));
+        } catch (Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to update location. ' . $e->getMessage(), 500);
+        }
     }
 
-    /**
-     * Remove the specified location.
-     *
-     * @param  Location  $location
-     * @return JsonResponse
-     */
     public function destroy(Location $location): JsonResponse
     {
-        Gate::authorize('delete', new Location());
-        $location->delete();
-
-        return ApiResponse::success('Location deleted successfully', null, 200);
+        Gate::authorize('delete', $location);
+        try {
+            $location->delete();
+            return ApiResponse::success('Location deleted successfully', null, 200);
+        } catch (Exception $e) {
+            Log::error(__METHOD__ . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::error('Failed to delete location. ' . $e->getMessage(), 500);
+        }
     }
 }

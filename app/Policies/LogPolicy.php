@@ -41,7 +41,11 @@ class LogPolicy
 
     public function delete(User $user, Log $model): bool
     {
-
         return $user->hasPermissionTo(PermissionConstant::LOG_DELETE);
+    }
+
+    public function export(User $user): bool
+    {
+        return $user->hasPermissionTo(PermissionConstant::LOG_EXPORT);
     }
 }

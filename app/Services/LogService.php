@@ -42,6 +42,32 @@ class LogService extends BaseService
         return parent::list($params);
     }
 
+    public function exportAll(array $params = [])
+    {
+        $params['searchableColumns'] = ['room.name', 'room.location.name', 'user.name', 'note'];
+
+        if (isset($params['search']) && $params['search'] !== '') {
+            $code = array_search(strtolower($params['search']), self::STATUS_MAP);
+            if ($code !== false) {
+                $params['searchableColumns'] = ['note_code'];
+                $params['search'] = $code;
+                $params['exact'] = true;
+            }
+        }
+
+        $sortDir = in_array(strtolower($params['sort_dir'] ?? ''), ['asc', 'desc'])
+            ? strtolower($params['sort_dir'])
+            : 'desc';
+
+        $query = $this->model->newQuery()
+            ->with(['room.location', 'user']);
+
+        $this->applySearch($query, $params);
+        $this->applyDateRange($query, $params);
+
+        return $query->orderBy('logged_at', $sortDir)->get();
+    }
+
     public function create(array $data): LogModel
     {
         try {

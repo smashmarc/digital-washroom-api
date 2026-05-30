@@ -10,8 +10,8 @@ class UpdateLogRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        Gate::authorize('update', Log::class);
-        return true; // adjust if needed
+        Gate::authorize('update', $this->route('log'));
+        return true;
     }
 
     public function rules(): array

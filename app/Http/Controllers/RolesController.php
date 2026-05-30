@@ -22,17 +22,6 @@ class RolesController extends Controller
     public function index(Request $request): JsonResponse
     { 
         
-        $user = $request->user()->load('roles.permissions');
-    //     Log::debug('User accessing Role index', [
-    //     'id' => $user->id,
-    //     'name' => $user->name,
-    //     'roles' => $user->roles->pluck('name'),
-    //     'permissions' => $user->roles
-    //         ->flatMap(fn ($role) => $role->permissions->pluck('name'))
-    //         ->unique()
-    //         ->values(),
-    // ]);
-
        if (!Gate::any('view', new \App\Models\Role())){
             abort(403);
        }
@@ -53,7 +42,7 @@ class RolesController extends Controller
                 RoleResource::class
             );
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to fetch roles.', 500);
+            return ApiResponse::error('Failed to fetch roles. ' . $e->getMessage(), 500);
         }
     }
 
@@ -64,18 +53,18 @@ class RolesController extends Controller
             $role = $this->roleService->create($request->validated());
             return ApiResponse::success('Role created successfully.', new RoleResource($role), 201);
         } catch (\Exception $e) {
-            return ApiResponse::error('Failed to create role.', 500);
+            return ApiResponse::error('Failed to create role. ' . $e->getMessage(), 500);
         }
     }
 
     public function update(CreateRoleRequest $request, \App\Models\Role $role): JsonResponse
     {
-        Gate::authorize('update', new Role());
+        Gate::authorize('update', $role);
         try {
             $role = $this->roleService->update($request->validated(), $role);
             return ApiResponse::success('Role updated successfully.', new RoleResource($role));
         } catch (\Exception $e) {
-            return ApiResponse::error('Failed to update role.', 500);
+            return ApiResponse::error('Failed to update role. ' . $e->getMessage(), 500);
         }
     }
 
@@ -89,7 +78,7 @@ class RolesController extends Controller
                 new RoleResource($role)
             );
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to fetch role.', 500);
+            return ApiResponse::error('Failed to fetch role. ' . $e->getMessage(), 500);
         }
     }
 
@@ -97,12 +86,12 @@ class RolesController extends Controller
 
     public function destroy(Role $role): JsonResponse
     {
-        Gate::authorize('delete', Role::class);
+        Gate::authorize('delete', $role);
         try {
             $this->roleService->delete($role);
             return ApiResponse::success('Role deleted successfully.');
         } catch (Exception $e) {
-            return ApiResponse::error('Failed to delete role.', 500);
+            return ApiResponse::error('Failed to delete role. ' . $e->getMessage(), 500);
         }
     }
 
@@ -143,7 +132,7 @@ class RolesController extends Controller
              Log::error(__METHOD__ . $e->getMessage(), [               
                 'trace' => $e->getTraceAsString(),
             ]);
-            return ApiResponse::error('Failed to fetch Form Options.', 500);
+            return ApiResponse::error('Failed to fetch Form Options. ' . $e->getMessage(), 500);
         }
     }
 }
