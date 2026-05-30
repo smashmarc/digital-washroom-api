@@ -97,6 +97,8 @@ Route::middleware('auth:api')->group(function () {
      * Route Resource should be in Bottom to avoid overriding
      */
     Route::apiResource('locations', LocationsController::class);
+    //override for patch method spoofing
+    Route::post('/locations/{location}', [LocationsController::class, 'update']);
     Route::apiResource('rooms', RoomsController::class);
     Route::get('logs/export', [LogsController::class, 'export']);
     Route::apiResource('logs', LogsController::class);

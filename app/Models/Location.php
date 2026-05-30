@@ -13,6 +13,7 @@ class Location extends Model
     protected $fillable = [
         'name',
         'address',
+        'logo'
     ];
 
     public function rooms()
