@@ -35,6 +35,9 @@ class EvaluationController extends Controller
             'sort_dir',
             'per_page',
             'with',
+            'user_id',
+            'date_from',
+            'date_to',
         ]);
 
         try {

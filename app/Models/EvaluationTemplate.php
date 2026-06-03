@@ -30,7 +30,7 @@ class EvaluationTemplate extends Model
     public function questions(): BelongsToMany
     {
         return $this->belongsToMany(Question::class, 'template_questions')
-                    ->withPivot(['order', 'weight_override'])
+                    ->withPivot(['order'])
                     ->orderByPivot('order')
                     ->withTimestamps();
     }

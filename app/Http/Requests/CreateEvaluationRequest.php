@@ -7,8 +7,9 @@ class CreateEvaluationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_assignment_id' => 'required|integer|exists:user_assignments,id',
-            'overall_notes'      => 'nullable|string',
+            'user_id'                => 'required|integer|exists:users,id',
+            'evaluation_template_id' => 'required|integer|exists:evaluation_templates,id',
+            'overall_notes'          => 'nullable|string',
         ];
     }
 }

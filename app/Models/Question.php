@@ -12,8 +12,6 @@ class Question extends Model
     protected $fillable = [
         'question_category_id',
         'text',
-        'type',
-        'weight',
         'is_fatal',
         'is_active',
     ];
@@ -21,7 +19,6 @@ class Question extends Model
     protected $casts = [
         'is_fatal'  => 'boolean',
         'is_active' => 'boolean',
-        'weight'    => 'integer',
     ];
 
     public function category(): BelongsTo
@@ -32,7 +29,7 @@ class Question extends Model
     public function evaluationTemplates(): BelongsToMany
     {
         return $this->belongsToMany(EvaluationTemplate::class, 'template_questions')
-                    ->withPivot(['order', 'weight_override'])
+                    ->withPivot(['order'])
                     ->withTimestamps();
     }
 

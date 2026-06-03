@@ -8,6 +8,8 @@ class EvaluationFormOptionsResource extends JsonResource
         return [
             'answer_values' => $this->resource['answer_values'],
             'statuses'      => $this->resource['statuses'],
+            'users'         => UserResource::collection($this->resource['users']),
+            'templates'     => EvaluationTemplateResource::collection($this->resource['templates']),
         ];
     }
 }

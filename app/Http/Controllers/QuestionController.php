@@ -62,7 +62,7 @@ class QuestionController extends Controller
         Gate::authorize('view', new Question());
 
         try {
-            $question->load('category');
+            $question->load(['category', 'evaluationTemplates']);
             return ApiResponse::success('Question fetched successfully.', new QuestionResource($question));
         } catch (Exception $e) {
             return ApiResponse::error('Failed to fetch question. ' . $e->getMessage(), 500);

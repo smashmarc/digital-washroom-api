@@ -12,6 +12,7 @@ class EvaluationResource extends JsonResource
             'evaluator_id'       => $this->evaluator_id,
             'evaluator'          => new UserResource($this->whenLoaded('evaluator')),
             'score'              => $this->score,
+            'pass_score'         => $this->pass_score,
             'result'             => $this->result,
             'status'             => $this->status,
             'fatal_failed'       => $this->fatal_failed,

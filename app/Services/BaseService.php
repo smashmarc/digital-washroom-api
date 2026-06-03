@@ -46,6 +46,10 @@ abstract class BaseService
         if (!empty($params['with']) && is_array($params['with'])) {
             $query->with($params['with']);
         }
+
+        if (!empty($params['withCount']) && is_array($params['withCount'])) {
+            $query->withCount($params['withCount']);
+        }
     }
 
     protected function applySearch($query, array $params): void

@@ -5,6 +5,8 @@ namespace App\Services;
 use Exception;
 use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
+use App\Models\EvaluationTemplate;
+use App\Models\User;
 use App\Models\UserAssignment;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,8 +20,37 @@ class EvaluationService extends BaseService
 
     public function searchPaginatedList(array $params = [])
     {
-        $params['searchableColumns'] = ['status', 'result', 'evaluator.name'];
-        return parent::list($params);
+        $sortDir = in_array(strtolower($params['sort_dir'] ?? ''), ['asc', 'desc'])
+            ? strtolower($params['sort_dir'])
+            : 'desc';
+
+        $query = Evaluation::query();
+
+        if (!empty($params['user_id'])) {
+            $query->whereHas('assignment', fn($q) => $q->where('user_id', (int) $params['user_id']));
+        }
+
+        if (!empty($params['with']) && is_array($params['with'])) {
+            $query->with($params['with']);
+        }
+
+        if (!empty($params['date_from'])) {
+            $query->whereDate('submitted_at', '>=', $params['date_from']);
+        }
+        if (!empty($params['date_to'])) {
+            $query->whereDate('submitted_at', '<=', $params['date_to']);
+        }
+
+        if (!empty($params['search'])) {
+            $search = trim($params['search']);
+            $query->where(function ($q) use ($search) {
+                $q->where('status', 'like', "%{$search}%")
+                  ->orWhere('result', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->orderBy($params['sort_by'] ?? 'id', $sortDir)
+                     ->paginate(max(1, (int) ($params['per_page'] ?? 10)));
     }
 
     public function create(array $data): Evaluation
@@ -27,15 +58,24 @@ class EvaluationService extends BaseService
         DB::beginTransaction();
 
         try {
+            /** @var EvaluationTemplate $template */
+            $template = EvaluationTemplate::findOrFail($data['evaluation_template_id']);
+
+            /** @var UserAssignment $assignment */
+            $assignment = UserAssignment::create([
+                'user_id'                => $data['user_id'],
+                'evaluation_template_id' => $template->id,
+                'assigned_by'            => auth()->id(),
+                'status'                 => 'in_progress',
+            ]);
+
             $evaluation = Evaluation::create([
-                'user_assignment_id' => $data['user_assignment_id'],
+                'user_assignment_id' => $assignment->id,
                 'evaluator_id'       => auth()->id(),
+                'pass_score'         => $template->pass_score,
                 'overall_notes'      => $data['overall_notes'] ?? null,
                 'status'             => 'draft',
             ]);
-
-            // Mark assignment as in_progress when evaluation is started
-            $evaluation->assignment()->update(['status' => 'in_progress']);
 
             DB::commit();
             return $evaluation->load(['assignment.user', 'assignment.template', 'evaluator']);
@@ -218,8 +258,8 @@ class EvaluationService extends BaseService
         $totalCount = $eligible->count();
         $score      = round(($passCount / $totalCount) * 100, 2);
 
-        // Compare score against template pass_score threshold
-        $passThreshold = $evaluation->assignment?->template?->pass_score ?? 80;
+        // Compare against the snapshotted pass_score recorded at evaluation creation
+        $passThreshold = $evaluation->pass_score ?? 80;
 
         $evaluation->score        = $score;
         $evaluation->result       = $score >= $passThreshold ? 'passed' : 'failed';
@@ -233,6 +273,8 @@ class EvaluationService extends BaseService
             return [
                 'answer_values' => ['pass', 'fail', 'na'],
                 'statuses'      => ['draft', 'submitted'],
+                'users'         => User::orderBy('name', 'asc')->get(['id', 'name', 'email']),
+                'templates'     => EvaluationTemplate::where('is_active', true)->orderBy('name', 'asc')->get(['id', 'name']),
             ];
         } catch (Exception $e) {
             Log::error('EvaluationService::getFormOptions failed: ' . $e->getMessage(), [

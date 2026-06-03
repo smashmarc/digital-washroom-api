@@ -10,15 +10,13 @@ class QuestionResource extends JsonResource
             'question_category_id' => $this->question_category_id,
             'category'             => new QuestionCategoryResource($this->whenLoaded('category')),
             'text'                 => $this->text,
-            'type'                 => $this->type,
-            'weight'               => $this->weight,
             'is_fatal'             => $this->is_fatal,
             'is_active'            => $this->is_active,
+            'template_ids'         => $this->whenLoaded('evaluationTemplates', fn() => $this->evaluationTemplates->pluck('id')),
             'pivot'                => $this->when(
                 $this->relationLoaded('pivot') || isset($this->pivot),
                 fn() => [
-                    'order'          => $this->pivot?->order,
-                    'weight_override' => $this->pivot?->weight_override,
+                    'order' => $this->pivot?->order,
                 ]
             ),
             'created_at'           => $this->created_at,

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Exception;
+use App\Models\EvaluationTemplate;
 use App\Models\Question;
 use App\Models\QuestionCategory;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,7 @@ class QuestionService extends BaseService
 
     public function searchPaginatedList(array $params = [])
     {
-        $params['searchableColumns'] = ['text', 'type', 'category.name'];
+        $params['searchableColumns'] = ['text', 'category.name'];
         return parent::list($params);
     }
 
@@ -29,14 +30,16 @@ class QuestionService extends BaseService
             $question = Question::create([
                 'question_category_id' => $data['question_category_id'],
                 'text'                 => $data['text'],
-                'type'                 => $data['type'] ?? 'pass_fail',
-                'weight'               => $data['weight'] ?? 1,
                 'is_fatal'             => $data['is_fatal'] ?? false,
                 'is_active'            => $data['is_active'] ?? true,
             ]);
 
+            if (isset($data['template_ids']) && is_array($data['template_ids'])) {
+                $question->evaluationTemplates()->sync($data['template_ids']);
+            }
+
             DB::commit();
-            return $question->load('category');
+            return $question->load(['category', 'evaluationTemplates']);
 
         } catch (Exception $e) {
             DB::rollBack();
@@ -55,14 +58,16 @@ class QuestionService extends BaseService
         try {
             $question->question_category_id = $data['question_category_id'] ?? $question->question_category_id;
             $question->text                 = $data['text'];
-            $question->type                 = $data['type'] ?? $question->type;
-            $question->weight               = $data['weight'] ?? $question->weight;
             $question->is_fatal             = $data['is_fatal'] ?? $question->is_fatal;
             $question->is_active            = $data['is_active'] ?? $question->is_active;
             $question->save();
 
+            if (array_key_exists('template_ids', $data)) {
+                $question->evaluationTemplates()->sync($data['template_ids'] ?? []);
+            }
+
             DB::commit();
-            return $question->load('category');
+            return $question->load(['category', 'evaluationTemplates']);
 
         } catch (Exception $e) {
             DB::rollBack();
@@ -91,8 +96,8 @@ class QuestionService extends BaseService
     {
         try {
             return [
-                'categories' => QuestionCategory::where('is_active', true)->get(),
-                'types'      => ['pass_fail', 'text', 'scale'],
+                'categories' => QuestionCategory::where('is_active', true)->orderBy('name', 'asc')->get(),
+                'templates'  => EvaluationTemplate::where('is_active', true)->orderBy('name', 'asc')->get(['id', 'name']),
             ];
         } catch (Exception $e) {
             Log::error('QuestionService::getFormOptions failed: ' . $e->getMessage(), [

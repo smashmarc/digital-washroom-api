@@ -7,7 +7,7 @@ class QuestionFormOptionsResource extends JsonResource
     {
         return [
             'categories' => QuestionCategoryResource::collection($this->resource['categories']),
-            'types'      => $this->resource['types'],
+            'templates'  => EvaluationTemplateResource::collection($this->resource['templates']),
         ];
     }
 }

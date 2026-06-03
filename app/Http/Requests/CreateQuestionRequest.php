@@ -9,10 +9,10 @@ class CreateQuestionRequest extends FormRequest
         return [
             'question_category_id' => 'required|integer|exists:question_categories,id',
             'text'                 => 'required|string',
-            'type'                 => 'nullable|in:pass_fail,text,scale',
-            'weight'               => 'nullable|integer|min:1|max:10',
             'is_fatal'             => 'nullable|boolean',
             'is_active'            => 'nullable|boolean',
+            'template_ids'         => 'nullable|array',
+            'template_ids.*'       => 'integer|exists:evaluation_templates,id',
         ];
     }
 }

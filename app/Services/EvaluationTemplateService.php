@@ -18,6 +18,7 @@ class EvaluationTemplateService extends BaseService
     public function searchPaginatedList(array $params = [])
     {
         $params['searchableColumns'] = ['name', 'description'];
+        $params['withCount']         = ['questions'];
         return parent::list($params);
     }
 
@@ -85,8 +86,8 @@ class EvaluationTemplateService extends BaseService
     }
 
     /**
-     * Attach questions to a template with optional order and weight overrides.
-     * Payload: [['question_id' => 1, 'order' => 1, 'weight_override' => null], ...]
+     * Attach questions to a template with optional order.
+     * Payload: [['question_id' => 1, 'order' => 1], ...]
      */
     public function attachQuestions(EvaluationTemplate $template, array $questions): EvaluationTemplate
     {
@@ -96,8 +97,7 @@ class EvaluationTemplateService extends BaseService
             $syncData = [];
             foreach ($questions as $item) {
                 $syncData[$item['question_id']] = [
-                    'order'          => $item['order'] ?? 0,
-                    'weight_override' => $item['weight_override'] ?? null,
+                    'order' => $item['order'] ?? 0,
                 ];
             }
 

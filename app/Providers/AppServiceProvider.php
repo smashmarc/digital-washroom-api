@@ -11,6 +11,7 @@ use App\Models\QuestionCategory;
 use App\Models\Role;
 use App\Models\Room;
 use App\Models\User;
+use App\Models\UserAssignment;
 use App\Models\Location;
 use App\Models\Permission;
 use App\Models\Report;
@@ -23,6 +24,7 @@ use App\Policies\QuestionPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\RoomPolicy;
 use App\Policies\UserPolicy;
+use App\Policies\UserAssignmentPolicy;
 use App\Policies\LocationPolicy;
 use App\Policies\PermissionPolicy;
 use App\Policies\ReportPolicy;
@@ -58,5 +60,6 @@ class AppServiceProvider extends ServiceProvider
          Gate::policy(Question::class, QuestionPolicy::class);
          Gate::policy(EvaluationTemplate::class, EvaluationTemplatePolicy::class);
          Gate::policy(Evaluation::class, EvaluationPolicy::class);
+         Gate::policy(UserAssignment::class, UserAssignmentPolicy::class);
     }
 }
