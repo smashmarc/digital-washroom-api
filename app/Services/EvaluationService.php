@@ -7,7 +7,6 @@ use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
 use App\Models\EvaluationTemplate;
 use App\Models\User;
-use App\Models\UserAssignment;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -27,7 +26,7 @@ class EvaluationService extends BaseService
         $query = Evaluation::query();
 
         if (!empty($params['user_id'])) {
-            $query->whereHas('assignment', fn($q) => $q->where('user_id', (int) $params['user_id']));
+            $query->where('user_id', (int) $params['user_id']);
         }
 
         if (!empty($params['with']) && is_array($params['with'])) {
@@ -59,26 +58,20 @@ class EvaluationService extends BaseService
 
         try {
             /** @var EvaluationTemplate $template */
+            /** @var EvaluationTemplate $template */
             $template = EvaluationTemplate::findOrFail($data['evaluation_template_id']);
 
-            /** @var UserAssignment $assignment */
-            $assignment = UserAssignment::create([
+            $evaluation = Evaluation::create([
                 'user_id'                => $data['user_id'],
                 'evaluation_template_id' => $template->id,
-                'assigned_by'            => auth()->id(),
-                'status'                 => 'in_progress',
-            ]);
-
-            $evaluation = Evaluation::create([
-                'user_assignment_id' => $assignment->id,
-                'evaluator_id'       => auth()->id(),
-                'pass_score'         => $template->pass_score,
-                'overall_notes'      => $data['overall_notes'] ?? null,
-                'status'             => 'draft',
+                'evaluator_id'           => auth()->id(),
+                'pass_score'             => $template->pass_score,
+                'overall_notes'          => $data['overall_notes'] ?? null,
+                'status'                 => 'draft',
             ]);
 
             DB::commit();
-            return $evaluation->load(['assignment.user', 'assignment.template', 'evaluator']);
+            return $evaluation->load(['user', 'template', 'evaluator']);
 
         } catch (Exception $e) {
             DB::rollBack();
@@ -99,7 +92,7 @@ class EvaluationService extends BaseService
             $evaluation->save();
 
             DB::commit();
-            return $evaluation->load(['assignment', 'evaluator', 'answers.question']);
+            return $evaluation->load(['user', 'template', 'evaluator', 'answers.question']);
 
         } catch (Exception $e) {
             DB::rollBack();
@@ -139,7 +132,7 @@ class EvaluationService extends BaseService
             $this->recalculateScore($evaluation);
 
             DB::commit();
-            return $evaluation->load(['answers.question', 'assignment.template']);
+            return $evaluation->load(['answers.question', 'template']);
 
         } catch (Exception $e) {
             DB::rollBack();
@@ -200,11 +193,8 @@ class EvaluationService extends BaseService
             $evaluation->submitted_at = now();
             $evaluation->save();
 
-            // Mark the assignment as completed
-            $evaluation->assignment()->update(['status' => 'completed']);
-
             DB::commit();
-            return $evaluation->load(['answers.question', 'assignment.user', 'assignment.template', 'evaluator']);
+            return $evaluation->load(['answers.question', 'user', 'template', 'evaluator']);
 
         } catch (Exception $e) {
             DB::rollBack();

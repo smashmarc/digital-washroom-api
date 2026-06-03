@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Evaluation extends Model
 {
     protected $fillable = [
-        'user_assignment_id',
+        'user_id',
+        'evaluation_template_id',
         'evaluator_id',
         'score',
         'result',
@@ -27,9 +28,14 @@ class Evaluation extends Model
         'submitted_at' => 'datetime',
     ];
 
-    public function assignment(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(UserAssignment::class, 'user_assignment_id');
+        return $this->belongsTo(User::class);
+    }
+
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(EvaluationTemplate::class, 'evaluation_template_id');
     }
 
     public function evaluator(): BelongsTo

@@ -70,7 +70,7 @@ class EvaluationController extends Controller
         Gate::authorize('view', new Evaluation());
 
         try {
-            $evaluation->load(['assignment.user', 'assignment.template', 'evaluator', 'answers.question.category']);
+            $evaluation->load(['user', 'template', 'evaluator', 'answers.question.category']);
             return ApiResponse::success('Evaluation fetched successfully.', new EvaluationResource($evaluation));
         } catch (Exception $e) {
             return ApiResponse::error('Failed to fetch evaluation. ' . $e->getMessage(), 500);
@@ -101,7 +101,7 @@ class EvaluationController extends Controller
             $evaluation = $this->evaluationService->saveAnswers($evaluation, $request->validated()['answers']);
             return ApiResponse::success(
                 'Answers saved successfully.',
-                new EvaluationResource($evaluation->load(['answers.question', 'assignment.template']))
+                new EvaluationResource($evaluation->load(['answers.question', 'template']))
             );
         } catch (Exception $e) {
             return ApiResponse::error('Failed to save answers. ' . $e->getMessage(), 500);
