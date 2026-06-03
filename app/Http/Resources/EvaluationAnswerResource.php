@@ -8,8 +8,9 @@ class EvaluationAnswerResource extends JsonResource
         return [
             'id'            => $this->id,
             'evaluation_id' => $this->evaluation_id,
-            'question_id'   => $this->question_id,
-            'question'      => new QuestionResource($this->whenLoaded('question')),
+            'question_id'       => $this->question_id,
+            'question_snapshot' => $this->question_snapshot,
+            'question'          => new QuestionResource($this->whenLoaded('question')),
             'value'         => $this->value,
             'notes'         => $this->notes,
             'created_at'    => $this->created_at,

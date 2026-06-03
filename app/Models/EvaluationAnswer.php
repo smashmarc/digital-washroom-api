@@ -10,9 +10,11 @@ class EvaluationAnswer extends Model
     protected $fillable = [
         'evaluation_id',
         'question_id',
-        'value',   // pass | fail | na
+        'question_snapshot',
+        'value',
         'notes',
     ];
+
 
     public function evaluation(): BelongsTo
     {

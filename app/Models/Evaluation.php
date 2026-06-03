@@ -15,7 +15,6 @@ class Evaluation extends Model
         'score',
         'result',
         'status',
-        'fatal_failed',
         'pass_score',
         'overall_notes',
         'submitted_at',
@@ -24,7 +23,6 @@ class Evaluation extends Model
     protected $casts = [
         'score'        => 'float',
         'pass_score'   => 'integer',
-        'fatal_failed' => 'boolean',
         'submitted_at' => 'datetime',
     ];
 

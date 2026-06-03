@@ -30,7 +30,6 @@ class QuestionService extends BaseService
             $question = Question::create([
                 'question_category_id' => $data['question_category_id'],
                 'text'                 => $data['text'],
-                'is_fatal'             => $data['is_fatal'] ?? false,
                 'is_active'            => $data['is_active'] ?? true,
             ]);
 
@@ -58,7 +57,6 @@ class QuestionService extends BaseService
         try {
             $question->question_category_id = $data['question_category_id'] ?? $question->question_category_id;
             $question->text                 = $data['text'];
-            $question->is_fatal             = $data['is_fatal'] ?? $question->is_fatal;
             $question->is_active            = $data['is_active'] ?? $question->is_active;
             $question->save();
 

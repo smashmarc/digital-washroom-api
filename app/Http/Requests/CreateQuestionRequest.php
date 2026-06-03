@@ -9,7 +9,6 @@ class CreateQuestionRequest extends FormRequest
         return [
             'question_category_id' => 'required|integer|exists:question_categories,id',
             'text'                 => 'required|string',
-            'is_fatal'             => 'nullable|boolean',
             'is_active'            => 'nullable|boolean',
             'template_ids'         => 'nullable|array',
             'template_ids.*'       => 'integer|exists:evaluation_templates,id',

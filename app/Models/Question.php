@@ -12,12 +12,10 @@ class Question extends Model
     protected $fillable = [
         'question_category_id',
         'text',
-        'is_fatal',
         'is_active',
     ];
 
     protected $casts = [
-        'is_fatal'  => 'boolean',
         'is_active' => 'boolean',
     ];
 

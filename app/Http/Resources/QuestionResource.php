@@ -10,7 +10,6 @@ class QuestionResource extends JsonResource
             'question_category_id' => $this->question_category_id,
             'category'             => new QuestionCategoryResource($this->whenLoaded('category')),
             'text'                 => $this->text,
-            'is_fatal'             => $this->is_fatal,
             'is_active'            => $this->is_active,
             'template_ids'         => $this->whenLoaded('evaluationTemplates', fn() => $this->evaluationTemplates->pluck('id')),
             'pivot'                => $this->when(

@@ -17,7 +17,6 @@ class EvaluationResource extends JsonResource
             'pass_score'             => $this->pass_score,
             'result'                 => $this->result,
             'status'                 => $this->status,
-            'fatal_failed'           => $this->fatal_failed,
             'overall_notes'          => $this->overall_notes,
             'submitted_at'           => $this->submitted_at,
             'answers'                => EvaluationAnswerResource::collection($this->whenLoaded('answers')),

@@ -6,6 +6,7 @@ use Exception;
 use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
 use App\Models\EvaluationTemplate;
+use App\Models\Question;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -115,15 +116,22 @@ class EvaluationService extends BaseService
         DB::beginTransaction();
 
         try {
+            $questionIds = array_column($answers, 'question_id');
+            $questions   = Question::whereIn('id', $questionIds)->get()->keyBy('id');
+
             foreach ($answers as $answerData) {
+                $q        = $questions->get($answerData['question_id']);
+                $snapshot = $q?->text;
+
                 EvaluationAnswer::updateOrCreate(
                     [
                         'evaluation_id' => $evaluation->id,
                         'question_id'   => $answerData['question_id'],
                     ],
                     [
-                        'value' => $answerData['value'],
-                        'notes' => $answerData['notes'] ?? null,
+                        'value'             => $answerData['value'],
+                        'notes'             => $answerData['notes'] ?? null,
+                        'question_snapshot' => $snapshot,
                     ]
                 );
             }
@@ -209,51 +217,30 @@ class EvaluationService extends BaseService
     /**
      * Core scoring logic:
      * - 'na' answers are excluded from both numerator and denominator.
-     * - A fatal 'fail' auto-fails the entire evaluation regardless of score.
      * - If all answers are 'na', result is 'inconclusive'.
      * - result = 'passed' | 'failed' | 'inconclusive'
      */
     protected function recalculateScore(Evaluation $evaluation): void
     {
-        $answers = EvaluationAnswer::where('evaluation_id', $evaluation->id)
-            ->with('question')
-            ->get();
+        $answers = EvaluationAnswer::where('evaluation_id', $evaluation->id)->get();
 
-        // Separate NA from eligible
         $eligible = $answers->filter(fn($a) => $a->value !== 'na');
 
         if ($eligible->isEmpty()) {
-            $evaluation->score        = null;
-            $evaluation->result       = 'inconclusive';
-            $evaluation->fatal_failed = false;
+            $evaluation->score  = null;
+            $evaluation->result = 'inconclusive';
             $evaluation->save();
             return;
         }
 
-        // Check for fatal fail — any fatal question answered 'fail' auto-fails
-        $fatalFailed = $eligible->contains(
-            fn($a) => $a->value === 'fail' && $a->question?->is_fatal === true
-        );
-
-        if ($fatalFailed) {
-            $evaluation->score        = 0;
-            $evaluation->result       = 'failed';
-            $evaluation->fatal_failed = true;
-            $evaluation->save();
-            return;
-        }
-
-        // Normal scoring: count passes over eligible (non-NA) questions
         $passCount  = $eligible->where('value', 'pass')->count();
         $totalCount = $eligible->count();
         $score      = round(($passCount / $totalCount) * 100, 2);
 
-        // Compare against the snapshotted pass_score recorded at evaluation creation
         $passThreshold = $evaluation->pass_score ?? 80;
 
-        $evaluation->score        = $score;
-        $evaluation->result       = $score >= $passThreshold ? 'passed' : 'failed';
-        $evaluation->fatal_failed = false;
+        $evaluation->score  = $score;
+        $evaluation->result = $score >= $passThreshold ? 'passed' : 'failed';
         $evaluation->save();
     }
 
