@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Constants\Role as RoleConstant;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 
@@ -10,7 +11,7 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         $roles = [
-            'admin',
+            RoleConstant::ADMINISTRATOR,
             'manager',
             'supervisor',
             'inspector',

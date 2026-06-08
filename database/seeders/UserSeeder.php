@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Constants\Role as RoleConstant;
 use App\Models\Location;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -24,7 +25,7 @@ class UserSeeder extends Seeder
                 'location_id' => $locationIds[0],
             ]
         );
-        $admin->assignRole('admin');
+        $admin->assignRole(RoleConstant::ADMINISTRATOR);
 
         for ($i = 0; $i < 19; $i++) {
             $user = User::factory()->create([
