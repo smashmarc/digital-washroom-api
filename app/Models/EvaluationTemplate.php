@@ -27,9 +27,9 @@ class EvaluationTemplate extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function questions(): BelongsToMany
+    public function criteria(): BelongsToMany
     {
-        return $this->belongsToMany(Question::class, 'template_questions')
+        return $this->belongsToMany(Criteria::class, 'template_criteria', 'evaluation_template_id', 'criteria_id')
                     ->withPivot(['order'])
                     ->orderByPivot('order')
                     ->withTimestamps();

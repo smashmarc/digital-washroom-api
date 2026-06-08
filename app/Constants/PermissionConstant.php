@@ -75,20 +75,20 @@ class PermissionConstant
     public const ACDOCS_VIEW = 'acdocs.view';
 
     /**
-     * Question Categories Module
+     * Criteria Categories Module
      */
-    public const QUESTION_CATEGORY_CREATE = 'question-category.create';
-    public const QUESTION_CATEGORY_VIEW   = 'question-category.view';
-    public const QUESTION_CATEGORY_UPDATE = 'question-category.update';
-    public const QUESTION_CATEGORY_DELETE = 'question-category.delete';
+    public const CRITERIA_CATEGORY_CREATE = 'criteria-category.create';
+    public const CRITERIA_CATEGORY_VIEW   = 'criteria-category.view';
+    public const CRITERIA_CATEGORY_UPDATE = 'criteria-category.update';
+    public const CRITERIA_CATEGORY_DELETE = 'criteria-category.delete';
 
     /**
-     * Questions Module
+     * Criteria Module
      */
-    public const QUESTION_CREATE = 'question.create';
-    public const QUESTION_VIEW   = 'question.view';
-    public const QUESTION_UPDATE = 'question.update';
-    public const QUESTION_DELETE = 'question.delete';
+    public const CRITERIA_CREATE = 'criteria.create';
+    public const CRITERIA_VIEW   = 'criteria.view';
+    public const CRITERIA_UPDATE = 'criteria.update';
+    public const CRITERIA_DELETE = 'criteria.delete';
 
     /**
      * Evaluation Templates Module
@@ -171,17 +171,17 @@ class PermissionConstant
             // AC Docs
             self::ACDOCS_VIEW,
 
-            // Question Categories
-            self::QUESTION_CATEGORY_CREATE,
-            self::QUESTION_CATEGORY_VIEW,
-            self::QUESTION_CATEGORY_UPDATE,
-            self::QUESTION_CATEGORY_DELETE,
+            // Criteria Categories
+            self::CRITERIA_CATEGORY_CREATE,
+            self::CRITERIA_CATEGORY_VIEW,
+            self::CRITERIA_CATEGORY_UPDATE,
+            self::CRITERIA_CATEGORY_DELETE,
 
-            // Questions
-            self::QUESTION_CREATE,
-            self::QUESTION_VIEW,
-            self::QUESTION_UPDATE,
-            self::QUESTION_DELETE,
+            // Criteria
+            self::CRITERIA_CREATE,
+            self::CRITERIA_VIEW,
+            self::CRITERIA_UPDATE,
+            self::CRITERIA_DELETE,
 
             // Evaluation Templates
             self::EVALUATION_TEMPLATE_CREATE,

@@ -2,11 +2,10 @@
 
 namespace App\Services;
 
-use Exception;
+use App\Models\Criteria;
 use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
 use App\Models\EvaluationTemplate;
-use App\Models\Question;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -45,7 +44,10 @@ class EvaluationService extends BaseService
             $search = trim($params['search']);
             $query->where(function ($q) use ($search) {
                 $q->where('status', 'like', "%{$search}%")
-                  ->orWhere('result', 'like', "%{$search}%");
+                  ->orWhere('result', 'like', "%{$search}%")
+                  ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('evaluator', fn($e) => $e->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('template', fn($t) => $t->where('name', 'like', "%{$search}%"));
             });
         }
 
@@ -56,9 +58,7 @@ class EvaluationService extends BaseService
     public function create(array $data): Evaluation
     {
         DB::beginTransaction();
-
         try {
-            /** @var EvaluationTemplate $template */
             /** @var EvaluationTemplate $template */
             $template = EvaluationTemplate::findOrFail($data['evaluation_template_id']);
 
@@ -73,13 +73,9 @@ class EvaluationService extends BaseService
 
             DB::commit();
             return $evaluation->load(['user', 'template', 'evaluator']);
-
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('EvaluationService::create failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'data'  => $data,
-            ]);
+            Log::error('EvaluationService::create failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'data' => $data]);
             throw $e;
         }
     }
@@ -87,111 +83,79 @@ class EvaluationService extends BaseService
     public function update(array $data, Evaluation $evaluation): Evaluation
     {
         DB::beginTransaction();
-
         try {
             $evaluation->overall_notes = $data['overall_notes'] ?? $evaluation->overall_notes;
             $evaluation->save();
 
             DB::commit();
-            return $evaluation->load(['user', 'template', 'evaluator', 'answers.question']);
-
-        } catch (Exception $e) {
+            return $evaluation->load(['user', 'template', 'evaluator', 'answers.criteria']);
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('EvaluationService::update failed: ' . $e->getMessage(), [
-                'trace'         => $e->getTraceAsString(),
-                'data'          => $data,
-                'evaluation_id' => $evaluation->id,
-            ]);
+            Log::error('EvaluationService::update failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'data' => $data, 'evaluation_id' => $evaluation->id]);
             throw $e;
         }
     }
 
-    /**
-     * Save or update individual answers for an evaluation.
-     * Recalculates score after every save.
-     * Payload: [['question_id' => 1, 'value' => 'pass|fail|na', 'notes' => '...'], ...]
-     */
     public function saveAnswers(Evaluation $evaluation, array $answers): Evaluation
     {
         DB::beginTransaction();
-
         try {
-            $questionIds = array_column($answers, 'question_id');
-            $questions   = Question::whereIn('id', $questionIds)->get()->keyBy('id');
+            $criteriaIds = array_column($answers, 'criteria_id');
+            $criteriaMap = Criteria::whereIn('id', $criteriaIds)->get()->keyBy('id');
 
             foreach ($answers as $answerData) {
-                $q        = $questions->get($answerData['question_id']);
-                $snapshot = $q?->text;
+                $c        = $criteriaMap->get($answerData['criteria_id']);
+                $snapshot = $c?->text;
 
                 EvaluationAnswer::updateOrCreate(
                     [
                         'evaluation_id' => $evaluation->id,
-                        'question_id'   => $answerData['question_id'],
+                        'criteria_id'   => $answerData['criteria_id'],
                     ],
                     [
-                        'value'             => $answerData['value'],
-                        'notes'             => $answerData['notes'] ?? null,
-                        'question_snapshot' => $snapshot,
+                        'value'              => $answerData['value'],
+                        'notes'              => $answerData['notes'] ?? null,
+                        'criteria_snapshot'  => $snapshot,
                     ]
                 );
             }
 
-            // Recalculate score after every answer update
             $this->recalculateScore($evaluation);
 
             DB::commit();
-            return $evaluation->load(['answers.question', 'template']);
-
-        } catch (Exception $e) {
+            return $evaluation->load(['answers.criteria', 'template']);
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('EvaluationService::saveAnswers failed: ' . $e->getMessage(), [
-                'trace'         => $e->getTraceAsString(),
-                'evaluation_id' => $evaluation->id,
-                'answers'       => $answers,
-            ]);
+            Log::error('EvaluationService::saveAnswers failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'evaluation_id' => $evaluation->id, 'answers' => $answers]);
             throw $e;
         }
     }
 
-    /**
-     * Update a single answer by its own ID.
-     */
     public function updateAnswer(array $data, EvaluationAnswer $answer): EvaluationAnswer
     {
         DB::beginTransaction();
-
         try {
             $answer->value = $data['value'];
             $answer->notes = $data['notes'] ?? $answer->notes;
             $answer->save();
 
-            // Recalculate score after answer change
             $this->recalculateScore($answer->evaluation);
 
             DB::commit();
-            return $answer->load('question');
-
-        } catch (Exception $e) {
+            return $answer->load('criteria');
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('EvaluationService::updateAnswer failed: ' . $e->getMessage(), [
-                'trace'     => $e->getTraceAsString(),
-                'data'      => $data,
-                'answer_id' => $answer->id,
-            ]);
+            Log::error('EvaluationService::updateAnswer failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'data' => $data, 'answer_id' => $answer->id]);
             throw $e;
         }
     }
 
-    /**
-     * Submit the evaluation — locks it, calculates final score and result.
-     */
     public function submit(Evaluation $evaluation): Evaluation
     {
         DB::beginTransaction();
-
         try {
             if ($evaluation->status === 'submitted') {
-                throw new Exception('Evaluation has already been submitted.');
+                throw new \Exception('Evaluation has already been submitted.');
             }
 
             $this->recalculateScore($evaluation);
@@ -202,28 +166,17 @@ class EvaluationService extends BaseService
             $evaluation->save();
 
             DB::commit();
-            return $evaluation->load(['answers.question', 'user', 'template', 'evaluator']);
-
-        } catch (Exception $e) {
+            return $evaluation->load(['answers.criteria', 'user', 'template', 'evaluator']);
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('EvaluationService::submit failed: ' . $e->getMessage(), [
-                'trace'         => $e->getTraceAsString(),
-                'evaluation_id' => $evaluation->id,
-            ]);
+            Log::error('EvaluationService::submit failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'evaluation_id' => $evaluation->id]);
             throw $e;
         }
     }
 
-    /**
-     * Core scoring logic:
-     * - 'na' answers are excluded from both numerator and denominator.
-     * - If all answers are 'na', result is 'inconclusive'.
-     * - result = 'passed' | 'failed' | 'inconclusive'
-     */
     protected function recalculateScore(Evaluation $evaluation): void
     {
-        $answers = EvaluationAnswer::where('evaluation_id', $evaluation->id)->get();
-
+        $answers  = EvaluationAnswer::where('evaluation_id', $evaluation->id)->get();
         $eligible = $answers->filter(fn($a) => $a->value !== 'na');
 
         if ($eligible->isEmpty()) {
@@ -246,18 +199,11 @@ class EvaluationService extends BaseService
 
     public function getFormOptions(): array
     {
-        try {
-            return [
-                'answer_values' => ['pass', 'fail', 'na'],
-                'statuses'      => ['draft', 'submitted'],
-                'users'         => User::orderBy('name', 'asc')->get(['id', 'name', 'email']),
-                'templates'     => EvaluationTemplate::where('is_active', true)->orderBy('name', 'asc')->get(['id', 'name']),
-            ];
-        } catch (Exception $e) {
-            Log::error('EvaluationService::getFormOptions failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-            throw $e;
-        }
+        return [
+            'answer_values' => ['pass', 'fail', 'na'],
+            'statuses'      => ['draft', 'submitted'],
+            'users'         => User::orderBy('name', 'asc')->get(['id', 'name', 'email']),
+            'templates'     => EvaluationTemplate::where('is_active', true)->orderBy('name', 'asc')->get(['id', 'name']),
+        ];
     }
 }

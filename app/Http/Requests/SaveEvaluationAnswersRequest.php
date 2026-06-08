@@ -8,7 +8,7 @@ class SaveEvaluationAnswersRequest extends FormRequest
     {
         return [
             'answers'               => 'required|array|min:1',
-            'answers.*.question_id' => 'required|integer|exists:questions,id',
+            'answers.*.criteria_id' => 'required|integer|exists:criteria,id',
             'answers.*.value'       => 'required|in:pass,fail,na',
             'answers.*.notes'       => 'nullable|string',
         ];

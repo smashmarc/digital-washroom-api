@@ -10,8 +10,8 @@ use App\Http\Controllers\EvaluationTemplateController;
 use App\Http\Controllers\LocationsController;
 use App\Http\Controllers\LogsController;
 use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\QuestionCategoryController;
-use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\CriteriaCategoryController;
+use App\Http\Controllers\CriteriaController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\RoomsController;
@@ -90,24 +90,24 @@ Route::middleware('auth:api')->group(function () {
     });
 
     //=========//
-// ── Question Categories ──────────────────────────────────────────────
-    Route::prefix('question-categories')->group(function () {
-        Route::get('form-options', [QuestionCategoryController::class, 'getFormOptions']);
-        Route::get('/',            [QuestionCategoryController::class, 'index']);
-        Route::post('/',           [QuestionCategoryController::class, 'store']);
-        Route::get('{questionCategory}',    [QuestionCategoryController::class, 'show']);
-        Route::put('{questionCategory}',    [QuestionCategoryController::class, 'update']);
-        Route::delete('{questionCategory}', [QuestionCategoryController::class, 'destroy']);
+// ── Criteria Categories ──────────────────────────────────────────────
+    Route::prefix('criteria-categories')->group(function () {
+        Route::get('form-options', [CriteriaCategoryController::class, 'getFormOptions']);
+        Route::get('/',            [CriteriaCategoryController::class, 'index']);
+        Route::post('/',           [CriteriaCategoryController::class, 'store']);
+        Route::get('{criteriaCategory}',    [CriteriaCategoryController::class, 'show']);
+        Route::put('{criteriaCategory}',    [CriteriaCategoryController::class, 'update']);
+        Route::delete('{criteriaCategory}', [CriteriaCategoryController::class, 'destroy']);
     });
 
-    // ── Questions ────────────────────────────────────────────────────────
-    Route::prefix('questions')->group(function () {
-        Route::get('form-options', [QuestionController::class, 'getFormOptions']);
-        Route::get('/',            [QuestionController::class, 'index']);
-        Route::post('/',           [QuestionController::class, 'store']);
-        Route::get('{question}',    [QuestionController::class, 'show']);
-        Route::put('{question}',    [QuestionController::class, 'update']);
-        Route::delete('{question}', [QuestionController::class, 'destroy']);
+    // ── Criteria ────────────────────────────────────────────────────────
+    Route::prefix('criteria')->group(function () {
+        Route::get('form-options', [CriteriaController::class, 'getFormOptions']);
+        Route::get('/',            [CriteriaController::class, 'index']);
+        Route::post('/',           [CriteriaController::class, 'store']);
+        Route::get('{criteria}',    [CriteriaController::class, 'show']);
+        Route::put('{criteria}',    [CriteriaController::class, 'update']);
+        Route::delete('{criteria}', [CriteriaController::class, 'destroy']);
     });
 
     // ── Evaluation Templates ─────────────────────────────────────────────
@@ -119,9 +119,9 @@ Route::middleware('auth:api')->group(function () {
         Route::put('{evaluationTemplate}',    [EvaluationTemplateController::class, 'update']);
         Route::delete('{evaluationTemplate}', [EvaluationTemplateController::class, 'destroy']);
 
-        // Attach / detach questions
-        Route::post('{evaluationTemplate}/questions',              [EvaluationTemplateController::class, 'attachQuestions']);
-        Route::delete('{evaluationTemplate}/questions/{question}', [EvaluationTemplateController::class, 'detachQuestion']);
+        // Attach / detach criteria
+        Route::post('{evaluationTemplate}/criteria',              [EvaluationTemplateController::class, 'attachCriteria']);
+        Route::delete('{evaluationTemplate}/criteria/{criteria}', [EvaluationTemplateController::class, 'detachCriteria']);
     });
 
     // ── User Assignments ─────────────────────────────────────────────────

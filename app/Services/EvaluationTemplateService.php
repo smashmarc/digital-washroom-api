@@ -2,8 +2,7 @@
 
 namespace App\Services;
 
-use Exception;
-use App\Models\Question;
+use App\Models\Criteria;
 use App\Models\EvaluationTemplate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,14 +17,13 @@ class EvaluationTemplateService extends BaseService
     public function searchPaginatedList(array $params = [])
     {
         $params['searchableColumns'] = ['name', 'description'];
-        $params['withCount']         = ['questions'];
+        $params['withCount']         = ['criteria'];
         return parent::list($params);
     }
 
     public function create(array $data): EvaluationTemplate
     {
         DB::beginTransaction();
-
         try {
             $template = EvaluationTemplate::create([
                 'name'        => $data['name'],
@@ -37,13 +35,9 @@ class EvaluationTemplateService extends BaseService
 
             DB::commit();
             return $template;
-
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('EvaluationTemplateService::create failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'data'  => $data,
-            ]);
+            Log::error('EvaluationTemplateService::create failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'data' => $data]);
             throw $e;
         }
     }
@@ -51,7 +45,6 @@ class EvaluationTemplateService extends BaseService
     public function update(array $data, EvaluationTemplate $template): EvaluationTemplate
     {
         DB::beginTransaction();
-
         try {
             $template->name        = $data['name'];
             $template->description = $data['description'] ?? $template->description;
@@ -61,91 +54,50 @@ class EvaluationTemplateService extends BaseService
 
             DB::commit();
             return $template;
-
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('EvaluationTemplateService::update failed: ' . $e->getMessage(), [
-                'trace'       => $e->getTraceAsString(),
-                'data'        => $data,
-                'template_id' => $template->id,
-            ]);
+            Log::error('EvaluationTemplateService::update failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'data' => $data, 'template_id' => $template->id]);
             throw $e;
         }
     }
 
     public function delete(EvaluationTemplate $template): void
     {
-        try {
-            $template->delete();
-        } catch (Exception $e) {
-            Log::error("EvaluationTemplateService::delete failed for template {$template->id}: " . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-            throw $e;
-        }
+        $template->delete();
     }
 
-    /**
-     * Attach questions to a template with optional order.
-     * Payload: [['question_id' => 1, 'order' => 1], ...]
-     */
-    public function attachQuestions(EvaluationTemplate $template, array $questions): EvaluationTemplate
+    public function attachCriteria(EvaluationTemplate $template, array $criteria): EvaluationTemplate
     {
         DB::beginTransaction();
-
         try {
             $syncData = [];
-            foreach ($questions as $item) {
-                $syncData[$item['question_id']] = [
+            foreach ($criteria as $item) {
+                $syncData[$item['criteria_id']] = [
                     'order' => $item['order'] ?? 0,
                 ];
             }
 
-            $template->questions()->syncWithoutDetaching($syncData);
+            $template->criteria()->syncWithoutDetaching($syncData);
 
             DB::commit();
-            return $template->load('questions');
-
-        } catch (Exception $e) {
+            return $template->load('criteria');
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('EvaluationTemplateService::attachQuestions failed: ' . $e->getMessage(), [
-                'trace'       => $e->getTraceAsString(),
-                'template_id' => $template->id,
-                'questions'   => $questions,
-            ]);
+            Log::error('EvaluationTemplateService::attachCriteria failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'template_id' => $template->id, 'criteria' => $criteria]);
             throw $e;
         }
     }
 
-    /**
-     * Detach a single question from a template.
-     */
-    public function detachQuestion(EvaluationTemplate $template, Question $question): EvaluationTemplate
+    public function detachCriteria(EvaluationTemplate $template, Criteria $criteria): EvaluationTemplate
     {
-        try {
-            $template->questions()->detach($question->id);
-            return $template->load('questions');
-        } catch (Exception $e) {
-            Log::error('EvaluationTemplateService::detachQuestion failed: ' . $e->getMessage(), [
-                'trace'       => $e->getTraceAsString(),
-                'template_id' => $template->id,
-                'question_id' => $question->id,
-            ]);
-            throw $e;
-        }
+        $template->criteria()->detach($criteria->id);
+        return $template->load('criteria');
     }
 
     public function getFormOptions(): array
     {
-        try {
-            return [
-                'questions' => Question::where('is_active', true)->with('category')->get(),
-            ];
-        } catch (Exception $e) {
-            Log::error('EvaluationTemplateService::getFormOptions failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-            throw $e;
-        }
+        return [
+            'criteria' => Criteria::where('is_active', true)->with('category')->get(),
+        ];
     }
 }

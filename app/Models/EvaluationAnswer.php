@@ -9,8 +9,8 @@ class EvaluationAnswer extends Model
 {
     protected $fillable = [
         'evaluation_id',
-        'question_id',
-        'question_snapshot',
+        'criteria_id',
+        'criteria_snapshot',
         'value',
         'notes',
     ];
@@ -21,8 +21,8 @@ class EvaluationAnswer extends Model
         return $this->belongsTo(Evaluation::class);
     }
 
-    public function question(): BelongsTo
+    public function criteria(): BelongsTo
     {
-        return $this->belongsTo(Question::class);
+        return $this->belongsTo(Criteria::class);
     }
 }

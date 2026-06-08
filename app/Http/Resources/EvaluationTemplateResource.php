@@ -13,8 +13,8 @@ class EvaluationTemplateResource extends JsonResource
             'is_active'   => $this->is_active,
             'created_by'  => $this->created_by,
             'creator'     => new UserResource($this->whenLoaded('creator')),
-            'questions'   => QuestionResource::collection($this->whenLoaded('questions')),
-            'questions_count' => $this->whenCounted('questions'),
+            'criteria'        => CriteriaResource::collection($this->whenLoaded('criteria')),
+            'criteria_count'  => $this->whenCounted('criteria'),
             'created_at'  => $this->created_at,
             'updated_at'  => $this->updated_at,
         ];
