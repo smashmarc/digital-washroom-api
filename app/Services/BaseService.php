@@ -72,14 +72,18 @@ abstract class BaseService
 
     protected function applyDateRange($query, array $params): void
     {
-        if (!empty($params['date_from'])) {
-            $query->whereDate('logged_at', '>=', $params['date_from']);
-        }
-        if (!empty($params['date_to'])) {
-            $query->whereDate('logged_at', '<=', $params['date_to']);
+        if (!empty($params['date_from']) && !empty($params['date_to'])) {
+            $from = \Carbon\Carbon::parse($params['date_from'])->utc();
+            $to   = \Carbon\Carbon::parse($params['date_to'])->utc();
+            $query->whereBetween('logged_at', [$from, $to]);
+        } elseif (!empty($params['date_from'])) {
+            $from = \Carbon\Carbon::parse($params['date_from'])->utc();
+            $query->where('logged_at', '>=', $from);
+        } elseif (!empty($params['date_to'])) {
+            $to = \Carbon\Carbon::parse($params['date_to'])->utc();
+            $query->where('logged_at', '<=', $to);
         }
     }
-
     private function applyRelationSearch($q, string $column, string $search, bool $exact): void
     {
         $parts     = explode('.', $column);
@@ -105,5 +109,4 @@ abstract class BaseService
             ? $q->orWhere($column, '=', $search)
             : $q->orWhere($column, 'like', "%{$search}%");
     }
-
 }

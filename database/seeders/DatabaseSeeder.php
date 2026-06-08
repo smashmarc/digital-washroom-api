@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
             CriteriaCategorySeeder::class,
             CriteriaSeeder::class,
             EvaluationTemplateSeeder::class,
+            LogSeeder::class,
+            EvaluationSeeder::class,
         ]);
     }
 }

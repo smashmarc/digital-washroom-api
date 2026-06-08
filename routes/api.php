@@ -5,6 +5,7 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BackupDestinationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DevController;
+use App\Http\Controllers\SeederController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\EvaluationTemplateController;
 use App\Http\Controllers\LocationsController;
@@ -154,6 +155,11 @@ Route::middleware('auth:api')->group(function () {
 
 
     //======//
+    Route::prefix('dev/seeders')->group(function () {
+        Route::get('/',     [SeederController::class, 'index']);
+        Route::post('/run', [SeederController::class, 'run']);
+    });
+
     Route::prefix('system-log')->group(function () {
         Route::get('/', [SystemLogController::class, 'index']);
         Route::delete('/', [SystemLogController::class, 'clear']);
