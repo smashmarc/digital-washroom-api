@@ -14,6 +14,9 @@ class DatabaseSeeder extends Seeder
             LocationSeeder::class,
             UserSeeder::class,
             RoomSeeder::class,
+            CriteriaCategorySeeder::class,
+            CriteriaSeeder::class,
+            EvaluationTemplateSeeder::class,
         ]);
     }
 }
