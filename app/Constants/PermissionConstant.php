@@ -75,6 +75,46 @@ class PermissionConstant
     public const ACDOCS_VIEW = 'acdocs.view';
 
     /**
+     * Criteria Categories Module
+     */
+    public const CRITERIA_CATEGORY_CREATE = 'criteria-category.create';
+    public const CRITERIA_CATEGORY_VIEW   = 'criteria-category.view';
+    public const CRITERIA_CATEGORY_UPDATE = 'criteria-category.update';
+    public const CRITERIA_CATEGORY_DELETE = 'criteria-category.delete';
+
+    /**
+     * Criteria Module
+     */
+    public const CRITERIA_CREATE = 'criteria.create';
+    public const CRITERIA_VIEW   = 'criteria.view';
+    public const CRITERIA_UPDATE = 'criteria.update';
+    public const CRITERIA_DELETE = 'criteria.delete';
+
+    /**
+     * Evaluation Templates Module
+     */
+    public const EVALUATION_TEMPLATE_CREATE = 'evaluation-template.create';
+    public const EVALUATION_TEMPLATE_VIEW   = 'evaluation-template.view';
+    public const EVALUATION_TEMPLATE_UPDATE = 'evaluation-template.update';
+    public const EVALUATION_TEMPLATE_DELETE = 'evaluation-template.delete';
+
+    /**
+     * Evaluations Module
+     */
+    public const EVALUATION_CREATE = 'evaluation.create';
+    public const EVALUATION_VIEW   = 'evaluation.view';
+    public const EVALUATION_UPDATE = 'evaluation.update';
+    public const EVALUATION_DELETE = 'evaluation.delete';
+
+    /**
+     * User Assignments Module
+     */
+    public const USER_ASSIGNMENT_CREATE = 'user-assignment.create';
+    public const USER_ASSIGNMENT_VIEW   = 'user-assignment.view';
+    public const USER_ASSIGNMENT_UPDATE = 'user-assignment.update';
+    public const USER_ASSIGNMENT_DELETE = 'user-assignment.delete';
+
+    /**
      * Return all permissions
      */
     public static function all(): array
@@ -130,6 +170,36 @@ class PermissionConstant
 
             // AC Docs
             self::ACDOCS_VIEW,
+
+            // Criteria Categories
+            self::CRITERIA_CATEGORY_CREATE,
+            self::CRITERIA_CATEGORY_VIEW,
+            self::CRITERIA_CATEGORY_UPDATE,
+            self::CRITERIA_CATEGORY_DELETE,
+
+            // Criteria
+            self::CRITERIA_CREATE,
+            self::CRITERIA_VIEW,
+            self::CRITERIA_UPDATE,
+            self::CRITERIA_DELETE,
+
+            // Evaluation Templates
+            self::EVALUATION_TEMPLATE_CREATE,
+            self::EVALUATION_TEMPLATE_VIEW,
+            self::EVALUATION_TEMPLATE_UPDATE,
+            self::EVALUATION_TEMPLATE_DELETE,
+
+            // Evaluations
+            self::EVALUATION_CREATE,
+            self::EVALUATION_VIEW,
+            self::EVALUATION_UPDATE,
+            self::EVALUATION_DELETE,
+
+            // User Assignments
+            self::USER_ASSIGNMENT_CREATE,
+            self::USER_ASSIGNMENT_VIEW,
+            self::USER_ASSIGNMENT_UPDATE,
+            self::USER_ASSIGNMENT_DELETE,
         ];
     }
 }

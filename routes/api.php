@@ -2,16 +2,22 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BackupController;
-use App\Http\Controllers\SystemLogController;
 use App\Http\Controllers\BackupDestinationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DevController;
+use App\Http\Controllers\SeederController;
+use App\Http\Controllers\EvaluationController;
+use App\Http\Controllers\EvaluationTemplateController;
 use App\Http\Controllers\LocationsController;
 use App\Http\Controllers\LogsController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\CriteriaCategoryController;
+use App\Http\Controllers\CriteriaController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\RoomsController;
+use App\Http\Controllers\SystemLogController;
+use App\Http\Controllers\UserAssignmentController;
 use App\Http\Controllers\UsersController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -84,9 +90,75 @@ Route::middleware('auth:api')->group(function () {
         Route::post('destinations/{destination}/send', [BackupDestinationController::class, 'send']);
     });
 
+    //=========//
+// ── Criteria Categories ──────────────────────────────────────────────
+    Route::prefix('criteria-categories')->group(function () {
+        Route::get('form-options', [CriteriaCategoryController::class, 'getFormOptions']);
+        Route::get('/',            [CriteriaCategoryController::class, 'index']);
+        Route::post('/',           [CriteriaCategoryController::class, 'store']);
+        Route::get('{criteriaCategory}',    [CriteriaCategoryController::class, 'show']);
+        Route::put('{criteriaCategory}',    [CriteriaCategoryController::class, 'update']);
+        Route::delete('{criteriaCategory}', [CriteriaCategoryController::class, 'destroy']);
+    });
+
+    // ── Criteria ────────────────────────────────────────────────────────
+    Route::prefix('criteria')->group(function () {
+        Route::get('form-options', [CriteriaController::class, 'getFormOptions']);
+        Route::get('/',            [CriteriaController::class, 'index']);
+        Route::post('/',           [CriteriaController::class, 'store']);
+        Route::get('{criteria}',    [CriteriaController::class, 'show']);
+        Route::put('{criteria}',    [CriteriaController::class, 'update']);
+        Route::delete('{criteria}', [CriteriaController::class, 'destroy']);
+    });
+
+    // ── Evaluation Templates ─────────────────────────────────────────────
+    Route::prefix('evaluation-templates')->group(function () {
+        Route::get('form-options', [EvaluationTemplateController::class, 'getFormOptions']);
+        Route::get('/',            [EvaluationTemplateController::class, 'index']);
+        Route::post('/',           [EvaluationTemplateController::class, 'store']);
+        Route::get('{evaluationTemplate}',    [EvaluationTemplateController::class, 'show']);
+        Route::put('{evaluationTemplate}',    [EvaluationTemplateController::class, 'update']);
+        Route::delete('{evaluationTemplate}', [EvaluationTemplateController::class, 'destroy']);
+
+        // Attach / detach criteria
+        Route::post('{evaluationTemplate}/criteria',              [EvaluationTemplateController::class, 'attachCriteria']);
+        Route::delete('{evaluationTemplate}/criteria/{criteria}', [EvaluationTemplateController::class, 'detachCriteria']);
+    });
+
+    // ── User Assignments ─────────────────────────────────────────────────
+    Route::prefix('user-assignments')->group(function () {
+        Route::get('form-options', [UserAssignmentController::class, 'getFormOptions']);
+        Route::get('/',            [UserAssignmentController::class, 'index']);
+        Route::post('/',           [UserAssignmentController::class, 'store']);
+        Route::get('{userAssignment}',    [UserAssignmentController::class, 'show']);
+        Route::put('{userAssignment}',    [UserAssignmentController::class, 'update']);
+        Route::delete('{userAssignment}', [UserAssignmentController::class, 'destroy']);
+    });
+
+    // ── Evaluations ──────────────────────────────────────────────────────
+    Route::prefix('evaluations')->group(function () {
+        Route::get('form-options', [EvaluationController::class, 'getFormOptions']);
+        Route::get('/',            [EvaluationController::class, 'index']);
+        Route::post('/',           [EvaluationController::class, 'store']);
+        Route::get('{evaluation}',    [EvaluationController::class, 'show']);
+        Route::put('{evaluation}',    [EvaluationController::class, 'update']);
+
+        // Save / upsert answers (recalculates score automatically)
+        Route::post('{evaluation}/answers', [EvaluationController::class, 'saveAnswers']);
+
+        // Submit evaluation (locks and finalises result)
+        Route::post('{evaluation}/submit', [EvaluationController::class, 'submit']);
+    });
+
+    // ── Standalone answer update (recalculates score automatically) ──────
+    Route::put('answers/{answer}', [EvaluationController::class, 'updateAnswer']);
 
 
-
+    //======//
+    Route::prefix('dev/seeders')->group(function () {
+        Route::get('/',     [SeederController::class, 'index']);
+        Route::post('/run', [SeederController::class, 'run']);
+    });
 
     Route::prefix('system-log')->group(function () {
         Route::get('/', [SystemLogController::class, 'index']);
