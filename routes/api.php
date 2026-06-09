@@ -60,6 +60,7 @@ Route::middleware('auth:api')->group(function () {
     });
 
     Route::get('dashboard', [DashboardController::class, 'index']);
+    Route::get('dashboard/needs-attention', [DashboardController::class, 'needsAttention']);
 
     Route::post('force-change-password', [AuthController::class, 'forceChangePassword']);
 
