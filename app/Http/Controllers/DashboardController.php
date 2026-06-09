@@ -134,14 +134,22 @@ class DashboardController extends Controller
     {
         $dateFrom = Carbon::parse($request->query('date_from'))->utc();
         $dateTo   = Carbon::parse($request->query('date_to'))->utc();
+        $search   = trim((string) $request->query('search', ''));
+        $perPage  = max(1, (int) $request->query('per_page', 25));
 
         $rooms = Room::whereDoesntHave('logs', function ($q) use ($dateFrom, $dateTo) {
             $q->where('note_code', '!=', 0)
                 ->whereBetween('logged_at', [$dateFrom, $dateTo]);
         })
             ->with('location')
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($sq) use ($search) {
+                    $sq->where('name', 'like', "%{$search}%")
+                        ->orWhereHas('location', fn($lq) => $lq->where('name', 'like', "%{$search}%"));
+                });
+            })
             ->orderBy('name')
-            ->get();
+            ->paginate($perPage);
 
         return ApiResponse::success(
             'Rooms needing attention fetched.',
