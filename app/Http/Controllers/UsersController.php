@@ -37,7 +37,7 @@ class UsersController extends Controller
     public function show(User $user): JsonResponse
     {
         Gate::authorize('view', User::class);
-        $user->load('roles');
+        $user->load(['roles', 'location', 'departments']);
         return ApiResponse::success('User fetched successfully.', new UserResource($user));
     }
 

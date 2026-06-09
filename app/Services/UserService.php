@@ -5,6 +5,7 @@ namespace App\Services;
 use Exception;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Department;
 use App\Models\Location;
 use App\Constants\Role as RoleConstant;
 use Illuminate\Support\Arr;
@@ -38,7 +39,8 @@ class UserService extends BaseService
             })->get();
 
             $locations = Location::all();
-            return ['roles' => $roles, 'locations' => $locations];
+            $departments = Department::orderBy('name')->get();
+            return ['roles' => $roles, 'locations' => $locations, 'departments' => $departments];
         } catch (Exception $e) {
             Log::error('Failed to fetch form options ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
@@ -54,9 +56,11 @@ class UserService extends BaseService
         DB::beginTransaction();
         try {
             $user = User::create($data);
-            // Assign roles if provided
             if (isset($data['roles'])) {
                 $user->syncRoles($data['roles']);
+            }
+            if (isset($data['departments'])) {
+                $user->departments()->sync($data['departments']);
             }
             DB::commit();
             return $user;
@@ -79,6 +83,9 @@ class UserService extends BaseService
             $user->update($data);
             if (isset($data['roles'])) {
                 $user->syncRoles($data['roles']);
+            }
+            if (isset($data['departments'])) {
+                $user->departments()->sync($data['departments']);
             }
 
             DB::commit();
