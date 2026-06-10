@@ -12,6 +12,7 @@ class Location extends Model
 
     protected $fillable = [
         'name',
+        'branding_title',
         'address',
         'logo'
     ];
