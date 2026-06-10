@@ -1,13 +1,20 @@
 <?php
 namespace App\Http\Resources;
+use App\Models\EvaluationDepartment;
 use Illuminate\Http\Resources\Json\JsonResource;
 class EvaluationResource extends JsonResource
 {
     public function toArray($request): array
     {
         return [
-            'id'                     => $this->id,
-            'user_id'                => $this->user_id,
+            'id'          => $this->id,
+            'user_id'     => $this->user_id,
+            'departments' => $this->whenLoaded('evaluationDepartments', fn() =>
+                $this->evaluationDepartments->map(fn(EvaluationDepartment $ed) => [
+                    'id'   => $ed->department_id,
+                    'name' => $ed->name,
+                ])
+            ),
             'evaluation_template_id' => $this->evaluation_template_id,
             'user'                   => new UserResource($this->whenLoaded('user')),
             'template'               => new EvaluationTemplateResource($this->whenLoaded('template')),

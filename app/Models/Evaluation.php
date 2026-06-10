@@ -45,4 +45,9 @@ class Evaluation extends Model
     {
         return $this->hasMany(EvaluationAnswer::class);
     }
+
+    public function evaluationDepartments(): HasMany
+    {
+        return $this->hasMany(EvaluationDepartment::class);
+    }
 }
