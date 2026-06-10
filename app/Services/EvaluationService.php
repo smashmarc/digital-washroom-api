@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Criteria;
 use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
+use App\Models\EvaluationDepartment;
 use App\Models\EvaluationTemplate;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -62,6 +63,8 @@ class EvaluationService extends BaseService
             /** @var EvaluationTemplate $template */
             $template = EvaluationTemplate::findOrFail($data['evaluation_template_id']);
 
+            $user = User::with('departments')->findOrFail($data['user_id']);
+
             $evaluation = Evaluation::create([
                 'user_id'                => $data['user_id'],
                 'evaluation_template_id' => $template->id,
@@ -71,8 +74,17 @@ class EvaluationService extends BaseService
                 'status'                 => 'draft',
             ]);
 
+            foreach ($user->departments as $dept) {
+                /** @var \App\Models\Department $dept */
+                EvaluationDepartment::create([
+                    'evaluation_id' => $evaluation->id,
+                    'department_id' => $dept->id,
+                    'name'          => $dept->name,
+                ]);
+            }
+
             DB::commit();
-            return $evaluation->load(['user', 'template', 'evaluator']);
+            return $evaluation->load(['user', 'template', 'evaluator', 'evaluationDepartments']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('EvaluationService::create failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'data' => $data]);
@@ -88,7 +100,7 @@ class EvaluationService extends BaseService
             $evaluation->save();
 
             DB::commit();
-            return $evaluation->load(['user', 'template', 'evaluator', 'answers.criteria']);
+            return $evaluation->load(['user', 'template', 'evaluator', 'evaluationDepartments', 'answers.criteria']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('EvaluationService::update failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'data' => $data, 'evaluation_id' => $evaluation->id]);
@@ -166,7 +178,7 @@ class EvaluationService extends BaseService
             $evaluation->save();
 
             DB::commit();
-            return $evaluation->load(['answers.criteria', 'user', 'template', 'evaluator']);
+            return $evaluation->load(['answers.criteria', 'user', 'template', 'evaluator', 'evaluationDepartments']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('EvaluationService::submit failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'evaluation_id' => $evaluation->id]);
@@ -202,7 +214,7 @@ class EvaluationService extends BaseService
         return [
             'answer_values' => ['pass', 'fail', 'na'],
             'statuses'      => ['draft', 'submitted'],
-            'users'         => User::orderBy('name', 'asc')->get(['id', 'name', 'email']),
+            'users'         => User::with('departments')->orderBy('name', 'asc')->get(),
             'templates'     => EvaluationTemplate::where('is_active', true)->orderBy('name', 'asc')->get(['id', 'name']),
         ];
     }

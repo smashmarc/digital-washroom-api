@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\EvaluationTemplate;
 use App\Models\Log as LogModel;
 use App\Models\Room;
 use App\Models\User;
@@ -211,5 +212,140 @@ class ReportService
     {
         return $this->locationSummary(array_merge($params, ['per_page' => PHP_INT_MAX]))
                     ->getCollection();
+    }
+
+    // ── 5. QA — Employee Performance ────────────────────────────────
+
+    public function qaEmployeePerformance(array $params = [])
+    {
+        $df     = $params['date_from']    ?? null;
+        $dt     = $params['date_to']      ?? null;
+        $deptId = $params['department_id'] ?? null;
+
+        $base = fn($q) => $q->from('evaluations')
+            ->whereColumn('user_id', 'users.id')
+            ->where('status', 'submitted')
+            ->when($df,     fn($q) => $q->whereDate('submitted_at', '>=', $df))
+            ->when($dt,     fn($q) => $q->whereDate('submitted_at', '<=', $dt))
+            ->when($deptId, fn($q) => $q->whereExists(
+                fn($sub) => $sub->from('evaluation_departments as ed_f')
+                    ->whereColumn('ed_f.evaluation_id', 'evaluations.id')
+                    ->where('ed_f.department_id', (int) $deptId)
+                    ->selectRaw('1')
+            ));
+
+        $query = User::select('users.id', 'users.name')
+            ->selectSub(fn($q) => $base($q)->selectRaw('COUNT(*)'),                                  'total_evaluations')
+            ->selectSub(fn($q) => $base($q)->selectRaw('ROUND(AVG(score), 1)'),                      'avg_score')
+            ->selectSub(fn($q) => $base($q)->where('result', 'passed')->selectRaw('COUNT(*)'),       'passed')
+            ->selectSub(fn($q) => $base($q)->where('result', 'failed')->selectRaw('COUNT(*)'),       'failed')
+            ->selectSub(fn($q) => $base($q)->where('result', 'inconclusive')->selectRaw('COUNT(*)'), 'inconclusive')
+            ->selectSub(fn($q) => $base($q)->selectRaw('MAX(submitted_at)'),                         'last_evaluated')
+            ->having('total_evaluations', '>', 0);
+
+        if (!empty($params['user_id'])) {
+            $query->where('users.id', (int) $params['user_id']);
+        }
+
+        return $query->orderByDesc('total_evaluations')
+                     ->paginate($params['per_page'] ?? 25);
+    }
+
+    // ── 6. QA — Template Analysis ───────────────────────────────────
+
+    public function qaTemplateAnalysis(array $params = [])
+    {
+        $df     = $params['date_from']    ?? null;
+        $dt     = $params['date_to']      ?? null;
+        $deptId = $params['department_id'] ?? null;
+
+        $base = fn($q) => $q->from('evaluations')
+            ->whereColumn('evaluation_template_id', 'evaluation_templates.id')
+            ->where('status', 'submitted')
+            ->when($df,     fn($q) => $q->whereDate('submitted_at', '>=', $df))
+            ->when($dt,     fn($q) => $q->whereDate('submitted_at', '<=', $dt))
+            ->when($deptId, fn($q) => $q->whereExists(
+                fn($sub) => $sub->from('evaluation_departments as ed_f')
+                    ->whereColumn('ed_f.evaluation_id', 'evaluations.id')
+                    ->where('ed_f.department_id', (int) $deptId)
+                    ->selectRaw('1')
+            ));
+
+        $query = EvaluationTemplate::select('evaluation_templates.id', 'evaluation_templates.name')
+            ->selectSub(fn($q) => $base($q)->selectRaw('COUNT(*)'),                                  'total_evaluations')
+            ->selectSub(fn($q) => $base($q)->selectRaw('ROUND(AVG(score), 1)'),                      'avg_score')
+            ->selectSub(fn($q) => $base($q)->where('result', 'passed')->selectRaw('COUNT(*)'),       'passed')
+            ->selectSub(fn($q) => $base($q)->where('result', 'failed')->selectRaw('COUNT(*)'),       'failed')
+            ->selectSub(fn($q) => $base($q)->where('result', 'inconclusive')->selectRaw('COUNT(*)'), 'inconclusive')
+            ->having('total_evaluations', '>', 0);
+
+        return $query->orderByDesc('total_evaluations')
+                     ->paginate($params['per_page'] ?? 25);
+    }
+
+    // ── 7. QA — Evaluator Activity ──────────────────────────────────
+
+    public function qaEvaluatorActivity(array $params = [])
+    {
+        $df     = $params['date_from']    ?? null;
+        $dt     = $params['date_to']      ?? null;
+        $deptId = $params['department_id'] ?? null;
+
+        $base = fn($q) => $q->from('evaluations')
+            ->whereColumn('evaluator_id', 'users.id')
+            ->where('status', 'submitted')
+            ->when($df,     fn($q) => $q->whereDate('submitted_at', '>=', $df))
+            ->when($dt,     fn($q) => $q->whereDate('submitted_at', '<=', $dt))
+            ->when($deptId, fn($q) => $q->whereExists(
+                fn($sub) => $sub->from('evaluation_departments as ed_f')
+                    ->whereColumn('ed_f.evaluation_id', 'evaluations.id')
+                    ->where('ed_f.department_id', (int) $deptId)
+                    ->selectRaw('1')
+            ));
+
+        $query = User::select('users.id', 'users.name')
+            ->selectSub(fn($q) => $base($q)->selectRaw('COUNT(*)'),                                  'total_conducted')
+            ->selectSub(fn($q) => $base($q)->selectRaw('ROUND(AVG(score), 1)'),                      'avg_score')
+            ->selectSub(fn($q) => $base($q)->where('result', 'passed')->selectRaw('COUNT(*)'),       'passed')
+            ->selectSub(fn($q) => $base($q)->where('result', 'failed')->selectRaw('COUNT(*)'),       'failed')
+            ->selectSub(fn($q) => $base($q)->where('result', 'inconclusive')->selectRaw('COUNT(*)'), 'inconclusive')
+            ->selectSub(fn($q) => $base($q)->selectRaw('MAX(submitted_at)'),                         'last_conducted')
+            ->having('total_conducted', '>', 0);
+
+        if (!empty($params['user_id'])) {
+            $query->where('users.id', (int) $params['user_id']);
+        }
+
+        return $query->orderByDesc('total_conducted')
+                     ->paginate($params['per_page'] ?? 25);
+    }
+
+    // ── 8. QA — Department Summary ──────────────────────────────────
+
+    public function qaDepartmentSummary(array $params = [])
+    {
+        $df     = $params['date_from']    ?? null;
+        $dt     = $params['date_to']      ?? null;
+        $deptId = $params['department_id'] ?? null;
+
+        $query = DB::table('evaluation_departments as ed')
+            ->join('evaluations as e', 'e.id', '=', 'ed.evaluation_id')
+            ->select(
+                'ed.department_id as id',
+                'ed.name',
+                DB::raw('COUNT(*) as total'),
+                DB::raw('ROUND(AVG(e.score), 1) as avg_score'),
+                DB::raw('SUM(CASE WHEN e.result = "passed" THEN 1 ELSE 0 END) as passed'),
+                DB::raw('SUM(CASE WHEN e.result = "failed" THEN 1 ELSE 0 END) as failed'),
+                DB::raw('SUM(CASE WHEN e.result = "inconclusive" THEN 1 ELSE 0 END) as inconclusive')
+            )
+            ->where('e.status', 'submitted')
+            ->when($df,     fn($q) => $q->whereDate('e.submitted_at', '>=', $df))
+            ->when($dt,     fn($q) => $q->whereDate('e.submitted_at', '<=', $dt))
+            ->when($deptId, fn($q) => $q->where('ed.department_id', (int) $deptId))
+            ->groupBy('ed.department_id', 'ed.name')
+            ->orderByDesc('total');
+
+        return $query->paginate($params['per_page'] ?? 25);
     }
 }

@@ -22,7 +22,7 @@ class UsersController extends Controller
     public function index(Request $request): JsonResponse
     {
         Gate::authorize('view', User::class);
-        $params = $request->only(['search', 'sort_by', 'sort_dir', 'per_page', 'with', 'columns', 'exact']);
+        $params = $request->only(['search', 'sort_by', 'sort_dir', 'per_page', 'with', 'columns', 'exact', 'department_id']);
         $users = $this->userService->searchPaginatedList($params);
         return ApiResponse::success('Users fetched successfully.', $users, 200, UserResource::class);
     }
@@ -37,7 +37,7 @@ class UsersController extends Controller
     public function show(User $user): JsonResponse
     {
         Gate::authorize('view', User::class);
-        $user->load('roles');
+        $user->load(['roles', 'location', 'departments']);
         return ApiResponse::success('User fetched successfully.', new UserResource($user));
     }
 

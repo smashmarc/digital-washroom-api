@@ -115,6 +115,14 @@ class PermissionConstant
     public const USER_ASSIGNMENT_DELETE = 'user-assignment.delete';
 
     /**
+     * Department Module
+     */
+    public const DEPARTMENT_CREATE = 'department.create';
+    public const DEPARTMENT_VIEW   = 'department.view';
+    public const DEPARTMENT_UPDATE = 'department.update';
+    public const DEPARTMENT_DELETE = 'department.delete';
+
+    /**
      * Return all permissions
      */
     public static function all(): array
@@ -200,6 +208,12 @@ class PermissionConstant
             self::USER_ASSIGNMENT_VIEW,
             self::USER_ASSIGNMENT_UPDATE,
             self::USER_ASSIGNMENT_DELETE,
+
+            // Departments
+            self::DEPARTMENT_CREATE,
+            self::DEPARTMENT_VIEW,
+            self::DEPARTMENT_UPDATE,
+            self::DEPARTMENT_DELETE,
         ];
     }
 }

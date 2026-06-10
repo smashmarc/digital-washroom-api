@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Location;
 use App\Helpers\ApiResponse;
 use App\Http\Resources\DashboardResource;
+use App\Http\Resources\RoomResource;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -30,10 +31,10 @@ class DashboardController extends Controller
                 ->where('note_code', '!=', 0);
         })->count();
 
-        // rooms needing attention (no log in last 24h)
-        $roomsNeedingAttention = Room::whereDoesntHave('logs', function ($q) {
+        // rooms needing attention (no cleaning log today)
+        $roomsNeedingAttention = Room::whereDoesntHave('logs', function ($q) use ($dateFrom, $dateTo) {
             $q->where('note_code', '!=', 0)
-                ->where('logged_at', '>=', now()->subHours(24));
+                ->whereBetween('logged_at', [$dateFrom, $dateTo]);
         })->count();
 
         // total users
@@ -126,6 +127,35 @@ class DashboardController extends Controller
             'dashboard data fetched.',
             new DashboardResource($items),
             200
+        );
+    }
+
+    public function needsAttention(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $dateFrom = Carbon::parse($request->query('date_from'))->utc();
+        $dateTo   = Carbon::parse($request->query('date_to'))->utc();
+        $search   = trim((string) $request->query('search', ''));
+        $perPage  = max(1, (int) $request->query('per_page', 25));
+
+        $rooms = Room::whereDoesntHave('logs', function ($q) use ($dateFrom, $dateTo) {
+            $q->where('note_code', '!=', 0)
+                ->whereBetween('logged_at', [$dateFrom, $dateTo]);
+        })
+            ->with('location')
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($sq) use ($search) {
+                    $sq->where('name', 'like', "%{$search}%")
+                        ->orWhereHas('location', fn($lq) => $lq->where('name', 'like', "%{$search}%"));
+                });
+            })
+            ->orderBy('name')
+            ->paginate($perPage);
+
+        return ApiResponse::success(
+            'Rooms needing attention fetched.',
+            $rooms,
+            200,
+            RoomResource::class
         );
     }
 }
