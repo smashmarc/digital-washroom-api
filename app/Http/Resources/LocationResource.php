@@ -18,6 +18,7 @@ class LocationResource extends JsonResource
             'id'      => $this->id,
             'name'    => $this->name,
             'address' => $this->address,
+            'logo'   => $this->logo,
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

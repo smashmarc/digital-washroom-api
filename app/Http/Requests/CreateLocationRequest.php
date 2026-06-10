@@ -19,6 +19,7 @@ class CreateLocationRequest extends FormRequest
         return [
             'name' => 'required|string|max:100|unique:locations,name',
             'address' => 'required|string',
+            'logo'    => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048',
         ];
     }
 

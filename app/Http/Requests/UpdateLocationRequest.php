@@ -25,6 +25,9 @@ class UpdateLocationRequest extends FormRequest
                 Rule::unique('locations', 'name')->ignore($this->route('location')->id),
             ],
             'address' => 'required|string',
+            'logo'        => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048',
+            'remove_logo' => 'nullable|boolean',
+
         ];
     }
 
