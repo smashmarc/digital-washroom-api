@@ -25,7 +25,9 @@ class CreateUserRequest extends FormRequest
             'roles'    => ['nullable', 'array'], // roles array
             'roles.*'  => ['integer', 'exists:roles,id'], // each role must exist in roles table
             'location_id' => ['nullable', 'exists:locations,id'],
-            'username' => ['required', 'string', 'max:32', 'unique:users,username']
+            'username'       => ['required', 'string', 'max:32', 'unique:users,username'],
+            'departments'    => ['nullable', 'array'],
+            'departments.*'  => ['integer', 'exists:departments,id'],
         ];
     }
 

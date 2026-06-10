@@ -41,6 +41,8 @@ class UpdateUserRequest extends FormRequest
                 'max:32',
                 Rule::unique('users', 'username')->ignore($this->user->id),
             ],
+            'departments'   => ['nullable', 'array'],
+            'departments.*' => ['integer', 'exists:departments,id'],
         ];
     }
 
