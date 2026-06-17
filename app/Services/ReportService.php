@@ -214,7 +214,70 @@ class ReportService
                     ->getCollection();
     }
 
-    // ── 5. QA — Employee Performance ────────────────────────────────
+    // ── 5. Location Detail (room-by-room for a location) ────────────
+
+    public function locationDetail(array $params = [])
+    {
+        $query = Room::select('rooms.*')
+            ->with('location')
+            ->selectSub(
+                fn($q) => $q->from('logs')
+                    ->whereColumn('room_id', 'rooms.id')
+                    ->when(!empty($params['date_from']), fn($q) => $q->whereDate('logged_at', '>=', $params['date_from']))
+                    ->when(!empty($params['date_to']),   fn($q) => $q->whereDate('logged_at', '<=', $params['date_to']))
+                    ->selectRaw('COUNT(*)'),
+                'total_logs'
+            )
+            ->selectSub(
+                fn($q) => $q->from('logs')
+                    ->whereColumn('room_id', 'rooms.id')
+                    ->where('note_code', 2)
+                    ->when(!empty($params['date_from']), fn($q) => $q->whereDate('logged_at', '>=', $params['date_from']))
+                    ->when(!empty($params['date_to']),   fn($q) => $q->whereDate('logged_at', '<=', $params['date_to']))
+                    ->selectRaw('COUNT(*)'),
+                'fully_cleaned'
+            )
+            ->selectSub(
+                fn($q) => $q->from('logs')
+                    ->whereColumn('room_id', 'rooms.id')
+                    ->where('note_code', 1)
+                    ->when(!empty($params['date_from']), fn($q) => $q->whereDate('logged_at', '>=', $params['date_from']))
+                    ->when(!empty($params['date_to']),   fn($q) => $q->whereDate('logged_at', '<=', $params['date_to']))
+                    ->selectRaw('COUNT(*)'),
+                'partially_cleaned'
+            )
+            ->selectSub(
+                fn($q) => $q->from('logs')
+                    ->whereColumn('room_id', 'rooms.id')
+                    ->where('note_code', 0)
+                    ->when(!empty($params['date_from']), fn($q) => $q->whereDate('logged_at', '>=', $params['date_from']))
+                    ->when(!empty($params['date_to']),   fn($q) => $q->whereDate('logged_at', '<=', $params['date_to']))
+                    ->selectRaw('COUNT(*)'),
+                'not_cleaned'
+            )
+            ->selectSub(
+                fn($q) => $q->from('logs')
+                    ->whereColumn('room_id', 'rooms.id')
+                    ->selectRaw('MAX(logged_at)'),
+                'last_cleaned'
+            );
+
+        if (!empty($params['location_id'])) {
+            $query->where('location_id', $params['location_id']);
+        }
+
+        return $query->orderBy('rooms.location_id')
+                     ->orderBy('rooms.name')
+                     ->paginate($params['per_page'] ?? 25);
+    }
+
+    public function locationDetailExport(array $params = [])
+    {
+        return $this->locationDetail(array_merge($params, ['per_page' => PHP_INT_MAX]))
+                    ->getCollection();
+    }
+
+    // ── 6. QA — Employee Performance ────────────────────────────────
 
     public function qaEmployeePerformance(array $params = [])
     {
@@ -320,7 +383,43 @@ class ReportService
                      ->paginate($params['per_page'] ?? 25);
     }
 
-    // ── 8. QA — Department Summary ──────────────────────────────────
+    // ── 8. QA — Location Summary ────────────────────────────────────
+
+    public function qaLocationSummary(array $params = [])
+    {
+        $df     = $params['date_from']    ?? null;
+        $dt     = $params['date_to']      ?? null;
+        $deptId = $params['department_id'] ?? null;
+
+        $query = DB::table('locations as l')
+            ->leftJoin('evaluations as e', function ($join) use ($df, $dt) {
+                $join->on('e.location_id', '=', 'l.id')
+                     ->where('e.status', 'submitted');
+                if ($df) $join->whereDate('e.submitted_at', '>=', $df);
+                if ($dt) $join->whereDate('e.submitted_at', '<=', $dt);
+            })
+            ->select(
+                'l.id',
+                'l.name',
+                DB::raw('COUNT(e.id) as total'),
+                DB::raw('ROUND(AVG(e.score), 1) as avg_score'),
+                DB::raw('SUM(CASE WHEN e.result = "passed" THEN 1 ELSE 0 END) as passed'),
+                DB::raw('SUM(CASE WHEN e.result = "failed" THEN 1 ELSE 0 END) as failed'),
+                DB::raw('SUM(CASE WHEN e.result = "inconclusive" THEN 1 ELSE 0 END) as inconclusive')
+            )
+            ->when($deptId, fn($q) => $q->whereExists(
+                fn($sub) => $sub->from('evaluation_departments as ed_f')
+                    ->whereColumn('ed_f.evaluation_id', 'e.id')
+                    ->where('ed_f.department_id', (int) $deptId)
+                    ->selectRaw('1')
+            ))
+            ->groupBy('l.id', 'l.name')
+            ->orderByDesc('total');
+
+        return $query->paginate($params['per_page'] ?? 25);
+    }
+
+    // ── 9. QA — Department Summary ──────────────────────────────────
 
     public function qaDepartmentSummary(array $params = [])
     {

@@ -19,6 +19,7 @@ use App\Http\Controllers\RoomsController;
 use App\Http\Controllers\SystemLogController;
 use App\Http\Controllers\UserAssignmentController;
 use App\Http\Controllers\DepartmentsController;
+use App\Http\Controllers\UnitsController;
 use App\Http\Controllers\UsersController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -171,6 +172,7 @@ Route::middleware('auth:api')->group(function () {
      * Route Resource should be in Bottom to avoid overriding
      */
     Route::apiResource('departments', DepartmentsController::class);
+    Route::apiResource('units', UnitsController::class);
     Route::apiResource('locations', LocationsController::class);
     //override for patch method spoofing
     Route::post('/locations/{location}', [LocationsController::class, 'update']);

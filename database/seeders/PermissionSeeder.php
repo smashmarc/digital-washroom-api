@@ -79,16 +79,29 @@ class PermissionSeeder extends Seeder
         PermissionConstant::EVALUATION_TEMPLATE_DELETE => 'Delete evaluation templates',
 
         // Evaluations
-        PermissionConstant::EVALUATION_CREATE => 'Start and create new evaluations',
-        PermissionConstant::EVALUATION_VIEW   => 'View evaluations and their results',
-        PermissionConstant::EVALUATION_UPDATE => 'Edit and conduct evaluations',
-        PermissionConstant::EVALUATION_DELETE => 'Delete evaluations',
+        PermissionConstant::EVALUATION_CREATE     => 'Start and create new evaluations',
+        PermissionConstant::EVALUATION_VIEW       => 'View evaluations and their results',
+        PermissionConstant::EVALUATION_UPDATE     => 'Edit and conduct any evaluation',
+        PermissionConstant::EVALUATION_UPDATE_OWN => 'Update own evaluation as the assigned evaluator',
+        PermissionConstant::EVALUATION_DELETE     => 'Delete evaluations',
 
         // User Assignments
         PermissionConstant::USER_ASSIGNMENT_CREATE => 'Assign evaluations to users',
         PermissionConstant::USER_ASSIGNMENT_VIEW   => 'View user evaluation assignments',
         PermissionConstant::USER_ASSIGNMENT_UPDATE => 'Edit user assignment details',
         PermissionConstant::USER_ASSIGNMENT_DELETE => 'Remove user evaluation assignments',
+
+        // Departments
+        PermissionConstant::DEPARTMENT_CREATE => 'Create new departments',
+        PermissionConstant::DEPARTMENT_VIEW   => 'View departments and the department list',
+        PermissionConstant::DEPARTMENT_UPDATE => 'Edit department details',
+        PermissionConstant::DEPARTMENT_DELETE => 'Delete departments',
+
+        // Units
+        PermissionConstant::UNIT_CREATE => 'Create new units',
+        PermissionConstant::UNIT_VIEW   => 'View units and the unit list',
+        PermissionConstant::UNIT_UPDATE => 'Edit unit details',
+        PermissionConstant::UNIT_DELETE => 'Delete units',
     ];
 
     public function run(): void

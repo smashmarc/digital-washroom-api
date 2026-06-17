@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($e->getStatusCode() === 403) {
                 return ApiResponse::error('Unauthorized.', 403);
             }
+            return ApiResponse::error($e->getMessage() ?: 'HTTP Error.', $e->getStatusCode());
         });
         $exceptions->render(function (\Exception $e) {
             Log::error(get_class($e) . ' ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);

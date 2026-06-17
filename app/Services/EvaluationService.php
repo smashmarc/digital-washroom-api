@@ -67,6 +67,9 @@ class EvaluationService extends BaseService
 
             $evaluation = Evaluation::create([
                 'user_id'                => $data['user_id'],
+                'location_id'            => $user->location_id,
+                'unit_id'                => $data['unit_id'] ?? null,
+                'room_id'                => $data['room_id'] ?? null,
                 'evaluation_template_id' => $template->id,
                 'evaluator_id'           => auth()->id(),
                 'pass_score'             => $template->pass_score,
@@ -97,6 +100,7 @@ class EvaluationService extends BaseService
         DB::beginTransaction();
         try {
             $evaluation->overall_notes = $data['overall_notes'] ?? $evaluation->overall_notes;
+            $evaluation->updated_by    = auth()->id();
             $evaluation->save();
 
             DB::commit();
@@ -131,6 +135,9 @@ class EvaluationService extends BaseService
                     ]
                 );
             }
+
+            $evaluation->updated_by = auth()->id();
+            $evaluation->save();
 
             $this->recalculateScore($evaluation);
 
@@ -175,6 +182,7 @@ class EvaluationService extends BaseService
 
             $evaluation->status       = 'submitted';
             $evaluation->submitted_at = now();
+            $evaluation->updated_by   = auth()->id();
             $evaluation->save();
 
             DB::commit();
@@ -215,7 +223,10 @@ class EvaluationService extends BaseService
             'answer_values' => ['pass', 'fail', 'na'],
             'statuses'      => ['draft', 'submitted'],
             'users'         => User::with('departments')->orderBy('name', 'asc')->get(),
-            'templates'     => EvaluationTemplate::where('is_active', true)->orderBy('name', 'asc')->get(['id', 'name']),
+            'templates'     => EvaluationTemplate::where('is_active', true)->orderBy('name', 'asc')->get(['id', 'name', 'description', 'pass_score']),
+            'units'         => \App\Models\Unit::orderBy('name', 'asc')->get(['id', 'name']),
+            'rooms'         => \App\Models\Room::orderBy('name', 'asc')->get(['id', 'name', 'location_id']),
+            'locations'     => \App\Models\Location::orderBy('name', 'asc')->get(['id', 'name']),
         ];
     }
 }

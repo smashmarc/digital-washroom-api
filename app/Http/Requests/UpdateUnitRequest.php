@@ -2,16 +2,16 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Department;
+use App\Models\Unit;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateDepartmentRequest extends FormRequest
+class UpdateUnitRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        Gate::authorize('update', $this->route('department'));
+        Gate::authorize('update', $this->route('unit'));
         return true;
     }
 
@@ -22,9 +22,8 @@ class UpdateDepartmentRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('departments', 'name')->ignore($this->route('department')?->id),
+                Rule::unique('units', 'name')->ignore($this->route('unit')?->id),
             ],
-            'enable_unit_option' => ['boolean'],
         ];
     }
 }

@@ -30,8 +30,8 @@ class EvaluationPolicy
 
     public function update(User $user, Evaluation $model): bool
     {
-        // The assigned evaluator can always update their own evaluation.
-        if ($model->evaluator_id === $user->id) {
+        // Users with update.own can update evaluations where they are the assigned evaluator.
+        if ($user->hasPermissionTo(PermissionConstant::EVALUATION_UPDATE_OWN) && $model->evaluator_id === $user->id) {
             return true;
         }
 

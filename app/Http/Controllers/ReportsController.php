@@ -34,6 +34,8 @@ class ReportsController extends Controller
             'room_status'              => $this->reportService->roomStatus($params),
             'user_performance'         => $this->reportService->userPerformance($params),
             'location_summary'         => $this->reportService->locationSummary($params),
+            'location_detail'          => $this->reportService->locationDetail($params),
+            'qa_location_summary'      => $this->reportService->qaLocationSummary($params),
             'qa_employee_performance'  => $this->reportService->qaEmployeePerformance($params),
             'qa_template_analysis'     => $this->reportService->qaTemplateAnalysis($params),
             'qa_evaluator_activity'    => $this->reportService->qaEvaluatorActivity($params),
@@ -64,6 +66,8 @@ class ReportsController extends Controller
             'room_status'             => $this->reportService->roomStatusExport($params),
             'user_performance'        => $this->reportService->userPerformanceExport($params),
             'location_summary'        => $this->reportService->locationSummaryExport($params),
+            'location_detail'         => $this->reportService->locationDetailExport($params),
+            'qa_location_summary'     => $this->reportService->qaLocationSummary(array_merge($params, ['per_page' => PHP_INT_MAX]))->getCollection(),
             'qa_employee_performance' => $this->reportService->qaEmployeePerformance(array_merge($params, ['per_page' => PHP_INT_MAX]))->getCollection(),
             'qa_template_analysis'    => $this->reportService->qaTemplateAnalysis(array_merge($params, ['per_page' => PHP_INT_MAX]))->getCollection(),
             'qa_evaluator_activity'   => $this->reportService->qaEvaluatorActivity(array_merge($params, ['per_page' => PHP_INT_MAX]))->getCollection(),
@@ -81,6 +85,8 @@ class ReportsController extends Controller
             'room_status'             => ['Location', 'Room', 'Last Cleaned', 'Last User', 'Status'],
             'user_performance'        => ['User', 'Total Logs', 'Fully Cleaned', 'Partially Cleaned', 'Not Cleaned', 'Last Active'],
             'location_summary'        => ['Location', 'Total Rooms', 'Total Logs', 'Fully Cleaned', 'Partially Cleaned', 'Not Cleaned'],
+            'location_detail'         => ['Location', 'Room', 'Total Logs', 'Fully Cleaned', 'Partially Cleaned', 'Not Cleaned', 'Last Cleaned'],
+            'qa_location_summary'     => ['Location', 'Evaluations', 'Avg Score', 'Passed', 'Failed', 'Inconclusive', 'Pass Rate (%)'],
             'qa_employee_performance' => ['Employee', 'Total Evaluations', 'Avg Score', 'Passed', 'Failed', 'Inconclusive', 'Last Evaluated'],
             'qa_template_analysis'    => ['Template', 'Total Evaluations', 'Avg Score', 'Passed', 'Failed', 'Inconclusive'],
             'qa_evaluator_activity'   => ['Evaluator', 'Total Conducted', 'Avg Score', 'Passed', 'Failed', 'Inconclusive', 'Last Conducted'],
@@ -119,6 +125,11 @@ class ReportsController extends Controller
                         $row->name, $row->total_rooms, $row->total_logs,
                         $row->fully_cleaned, $row->partially_cleaned, $row->not_cleaned,
                     ],
+                    'location_detail' => [
+                        $row->location?->name, $row->name, $row->total_logs,
+                        $row->fully_cleaned, $row->partially_cleaned, $row->not_cleaned,
+                        $row->last_cleaned,
+                    ],
                     'qa_employee_performance' => [
                         $r->name, $r->total_evaluations, $r->avg_score ?? '—',
                         $r->passed, $r->failed, $r->inconclusive, $r->last_evaluated ?? '—',
@@ -130,6 +141,11 @@ class ReportsController extends Controller
                     'qa_evaluator_activity' => [
                         $r->name, $r->total_conducted, $r->avg_score ?? '—',
                         $r->passed, $r->failed, $r->inconclusive, $r->last_conducted ?? '—',
+                    ],
+                    'qa_location_summary' => [
+                        $r->name, $r->total, $r->avg_score ?? '—',
+                        $r->passed, $r->failed, $r->inconclusive,
+                        $r->total > 0 ? round(($r->passed / $r->total) * 100, 1) : '—',
                     ],
                     'qa_department_summary' => [
                         $r->name, $r->total, $r->avg_score ?? '—',

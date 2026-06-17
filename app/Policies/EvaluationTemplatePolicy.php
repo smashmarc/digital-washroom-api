@@ -20,7 +20,11 @@ class EvaluationTemplatePolicy
 
     public function view(User $user): bool
     {
-        return $user->hasPermissionTo(PermissionConstant::EVALUATION_TEMPLATE_VIEW);
+        // Users who can create or conduct evaluations need to read template criteria.
+        return $user->hasPermissionTo(PermissionConstant::EVALUATION_TEMPLATE_VIEW)
+            || $user->hasPermissionTo(PermissionConstant::EVALUATION_CREATE)
+            || $user->hasPermissionTo(PermissionConstant::EVALUATION_UPDATE)
+            || $user->hasPermissionTo(PermissionConstant::EVALUATION_UPDATE_OWN);
     }
 
     public function create(User $user): bool

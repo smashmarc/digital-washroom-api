@@ -17,7 +17,8 @@ class CreateDepartmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255', 'unique:departments,name'],
+            'name'               => ['required', 'string', 'max:255', 'unique:departments,name'],
+            'enable_unit_option' => ['boolean'],
         ];
     }
 }

@@ -101,10 +101,11 @@ class PermissionConstant
     /**
      * Evaluations Module
      */
-    public const EVALUATION_CREATE = 'evaluation.create';
-    public const EVALUATION_VIEW   = 'evaluation.view';
-    public const EVALUATION_UPDATE = 'evaluation.update';
-    public const EVALUATION_DELETE = 'evaluation.delete';
+    public const EVALUATION_CREATE     = 'evaluation.create';
+    public const EVALUATION_VIEW       = 'evaluation.view';
+    public const EVALUATION_UPDATE     = 'evaluation.update';
+    public const EVALUATION_UPDATE_OWN = 'evaluation.update.own';
+    public const EVALUATION_DELETE     = 'evaluation.delete';
 
     /**
      * User Assignments Module
@@ -121,6 +122,14 @@ class PermissionConstant
     public const DEPARTMENT_VIEW   = 'department.view';
     public const DEPARTMENT_UPDATE = 'department.update';
     public const DEPARTMENT_DELETE = 'department.delete';
+
+    /**
+     * Unit Module
+     */
+    public const UNIT_CREATE = 'unit.create';
+    public const UNIT_VIEW   = 'unit.view';
+    public const UNIT_UPDATE = 'unit.update';
+    public const UNIT_DELETE = 'unit.delete';
 
     /**
      * Return all permissions
@@ -201,6 +210,7 @@ class PermissionConstant
             self::EVALUATION_CREATE,
             self::EVALUATION_VIEW,
             self::EVALUATION_UPDATE,
+            self::EVALUATION_UPDATE_OWN,
             self::EVALUATION_DELETE,
 
             // User Assignments
@@ -214,6 +224,12 @@ class PermissionConstant
             self::DEPARTMENT_VIEW,
             self::DEPARTMENT_UPDATE,
             self::DEPARTMENT_DELETE,
+
+            // Units
+            self::UNIT_CREATE,
+            self::UNIT_VIEW,
+            self::UNIT_UPDATE,
+            self::UNIT_DELETE,
         ];
     }
 }

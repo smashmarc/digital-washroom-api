@@ -10,8 +10,12 @@ class Evaluation extends Model
 {
     protected $fillable = [
         'user_id',
+        'location_id',
+        'unit_id',
+        'room_id',
         'evaluation_template_id',
         'evaluator_id',
+        'updated_by',
         'score',
         'result',
         'status',
@@ -31,6 +35,21 @@ class Evaluation extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Location::class);
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Unit::class);
+    }
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Room::class);
+    }
+
     public function template(): BelongsTo
     {
         return $this->belongsTo(EvaluationTemplate::class, 'evaluation_template_id');
@@ -39,6 +58,11 @@ class Evaluation extends Model
     public function evaluator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'evaluator_id');
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function answers(): HasMany

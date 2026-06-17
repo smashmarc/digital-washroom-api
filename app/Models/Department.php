@@ -9,7 +9,11 @@ class Department extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'enable_unit_option'];
+
+    protected $casts = [
+        'enable_unit_option' => 'boolean',
+    ];
 
     public function users()
     {
