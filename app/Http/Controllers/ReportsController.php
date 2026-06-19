@@ -25,7 +25,7 @@ class ReportsController extends Controller
 
         $params = $request->only([
             'type', 'date_from', 'date_to',
-            'location_id', 'user_id', 'status_code', 'department_id',
+            'location_id', 'user_id', 'status_code', 'department_id', 'unit_id',
             'per_page', 'page',
         ]);
 
@@ -56,7 +56,7 @@ class ReportsController extends Controller
 
         $params = $request->only([
             'type', 'date_from', 'date_to',
-            'location_id', 'user_id', 'status_code', 'department_id',
+            'location_id', 'user_id', 'status_code', 'department_id', 'unit_id',
         ]);
 
         $type = $params['type'] ?? '';

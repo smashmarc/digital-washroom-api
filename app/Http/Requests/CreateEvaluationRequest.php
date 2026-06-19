@@ -11,7 +11,7 @@ class CreateEvaluationRequest extends FormRequest
             'evaluation_template_id' => 'required|integer|exists:evaluation_templates,id',
             'overall_notes'          => 'nullable|string',
             'unit_id'                => 'nullable|integer|exists:units,id',
-            'room_id'                => 'nullable|integer|exists:rooms,id',
+            'room_name'              => 'nullable|string|max:255',
         ];
     }
 }

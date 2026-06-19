@@ -70,7 +70,7 @@ class EvaluationService extends BaseService
                 'user_id'                => $data['user_id'],
                 'location_id'            => $user->location_id,
                 'unit_id'                => $data['unit_id'] ?? null,
-                'room_id'                => $data['room_id'] ?? null,
+                'room_name'              => $data['room_name'] ?? null,
                 'evaluation_template_id' => $template->id,
                 'evaluator_id'           => auth()->id(),
                 'pass_score'             => $template->pass_score,
@@ -235,7 +235,7 @@ class EvaluationService extends BaseService
             'statuses'      => ['draft', 'submitted'],
             'users'         => User::with('departments')->orderBy('name', 'asc')->get(),
             'templates'     => EvaluationTemplate::where('is_active', true)->orderBy('name', 'asc')->get(['id', 'name', 'description', 'pass_score']),
-            'units'         => \App\Models\Unit::orderBy('name', 'asc')->get(['id', 'name']),
+            'units'         => \App\Models\Unit::orderBy('name', 'asc')->get(['id', 'name', 'location_id']),
             'rooms'         => \App\Models\Room::orderBy('name', 'asc')->get(['id', 'name', 'location_id']),
             'locations'     => \App\Models\Location::orderBy('name', 'asc')->get(['id', 'name']),
         ];

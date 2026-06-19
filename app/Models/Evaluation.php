@@ -12,7 +12,7 @@ class Evaluation extends Model
         'user_id',
         'location_id',
         'unit_id',
-        'room_id',
+        'room_name',
         'evaluation_template_id',
         'evaluator_id',
         'updated_by',
@@ -43,11 +43,6 @@ class Evaluation extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Unit::class);
-    }
-
-    public function room(): BelongsTo
-    {
-        return $this->belongsTo(\App\Models\Room::class);
     }
 
     public function template(): BelongsTo

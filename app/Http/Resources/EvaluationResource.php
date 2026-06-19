@@ -19,11 +19,7 @@ class EvaluationResource extends JsonResource
                 'id'   => $this->unit->id,
                 'name' => $this->unit->name,
             ]),
-            'room_id'     => $this->room_id,
-            'room'        => $this->whenLoaded('room', fn() => [
-                'id'   => $this->room->id,
-                'name' => $this->room->name,
-            ]),
+            'room_name'   => $this->room_name,
             'departments' => $this->whenLoaded('evaluationDepartments', fn() =>
                 $this->evaluationDepartments->map(fn(EvaluationDepartment $ed) => [
                     'id'   => $ed->department_id,

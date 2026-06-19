@@ -41,7 +41,7 @@ class EvaluationController extends Controller
     public function show(Evaluation $evaluation): JsonResponse
     {
         Gate::authorize('view', new Evaluation());
-        $evaluation->load(['user', 'template.criteria.category', 'evaluator', 'evaluationDepartments', 'answers.criteria.category', 'location', 'unit', 'room', 'updatedBy']);
+        $evaluation->load(['user', 'template.criteria.category', 'evaluator', 'evaluationDepartments', 'answers.criteria.category', 'location', 'unit', 'updatedBy']);
         return ApiResponse::success('Evaluation fetched successfully.', new EvaluationResource($evaluation));
     }
 

@@ -14,17 +14,18 @@ class UnitService extends BaseService
     public function searchPaginatedList(array $params = [])
     {
         $params['searchableColumns'] = ['name'];
+        $params['with']              = ['location'];
         return parent::list($params);
     }
 
     public function create(array $data): Unit
     {
-        return Unit::create($data);
+        return Unit::create($data)->load('location');
     }
 
     public function update(array $data, Unit $unit): Unit
     {
         $unit->update($data);
-        return $unit->fresh();
+        return $unit->fresh(['location']);
     }
 }

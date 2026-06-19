@@ -38,7 +38,7 @@ class UnitsController extends Controller
     public function show(Unit $unit): JsonResponse
     {
         Gate::authorize('view', new Unit());
-        return ApiResponse::success('Unit fetched successfully.', new UnitResource($unit));
+        return ApiResponse::success('Unit fetched successfully.', new UnitResource($unit->load('location')));
     }
 
     public function update(UpdateUnitRequest $request, Unit $unit): JsonResponse
