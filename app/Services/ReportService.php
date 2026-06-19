@@ -300,10 +300,9 @@ class ReportService
         $query = User::select('users.id', 'users.name')
             ->selectSub(fn($q) => $base($q)->selectRaw('COUNT(*)'),                                  'total_evaluations')
             ->selectSub(fn($q) => $base($q)->selectRaw('ROUND(AVG(score), 1)'),                      'avg_score')
-            ->selectSub(fn($q) => $base($q)->where('result', 'passed')->selectRaw('COUNT(*)'),       'passed')
-            ->selectSub(fn($q) => $base($q)->where('result', 'failed')->selectRaw('COUNT(*)'),       'failed')
-            ->selectSub(fn($q) => $base($q)->where('result', 'inconclusive')->selectRaw('COUNT(*)'), 'inconclusive')
-            ->selectSub(fn($q) => $base($q)->selectRaw('MAX(submitted_at)'),                         'last_evaluated')
+            ->selectSub(fn($q) => $base($q)->where('result', 'passed')->selectRaw('COUNT(*)'), 'passed')
+            ->selectSub(fn($q) => $base($q)->where('result', 'failed')->selectRaw('COUNT(*)'),  'failed')
+            ->selectSub(fn($q) => $base($q)->selectRaw('MAX(submitted_at)'),                    'last_evaluated')
             ->having('total_evaluations', '>', 0);
 
         if (!empty($params['user_id'])) {
@@ -337,9 +336,8 @@ class ReportService
         $query = EvaluationTemplate::select('evaluation_templates.id', 'evaluation_templates.name')
             ->selectSub(fn($q) => $base($q)->selectRaw('COUNT(*)'),                                  'total_evaluations')
             ->selectSub(fn($q) => $base($q)->selectRaw('ROUND(AVG(score), 1)'),                      'avg_score')
-            ->selectSub(fn($q) => $base($q)->where('result', 'passed')->selectRaw('COUNT(*)'),       'passed')
-            ->selectSub(fn($q) => $base($q)->where('result', 'failed')->selectRaw('COUNT(*)'),       'failed')
-            ->selectSub(fn($q) => $base($q)->where('result', 'inconclusive')->selectRaw('COUNT(*)'), 'inconclusive')
+            ->selectSub(fn($q) => $base($q)->where('result', 'passed')->selectRaw('COUNT(*)'), 'passed')
+            ->selectSub(fn($q) => $base($q)->where('result', 'failed')->selectRaw('COUNT(*)'),  'failed')
             ->having('total_evaluations', '>', 0);
 
         return $query->orderByDesc('total_evaluations')
@@ -369,10 +367,9 @@ class ReportService
         $query = User::select('users.id', 'users.name')
             ->selectSub(fn($q) => $base($q)->selectRaw('COUNT(*)'),                                  'total_conducted')
             ->selectSub(fn($q) => $base($q)->selectRaw('ROUND(AVG(score), 1)'),                      'avg_score')
-            ->selectSub(fn($q) => $base($q)->where('result', 'passed')->selectRaw('COUNT(*)'),       'passed')
-            ->selectSub(fn($q) => $base($q)->where('result', 'failed')->selectRaw('COUNT(*)'),       'failed')
-            ->selectSub(fn($q) => $base($q)->where('result', 'inconclusive')->selectRaw('COUNT(*)'), 'inconclusive')
-            ->selectSub(fn($q) => $base($q)->selectRaw('MAX(submitted_at)'),                         'last_conducted')
+            ->selectSub(fn($q) => $base($q)->where('result', 'passed')->selectRaw('COUNT(*)'), 'passed')
+            ->selectSub(fn($q) => $base($q)->where('result', 'failed')->selectRaw('COUNT(*)'),  'failed')
+            ->selectSub(fn($q) => $base($q)->selectRaw('MAX(submitted_at)'),                    'last_conducted')
             ->having('total_conducted', '>', 0);
 
         if (!empty($params['user_id'])) {
@@ -404,8 +401,7 @@ class ReportService
                 DB::raw('COUNT(e.id) as total'),
                 DB::raw('ROUND(AVG(e.score), 1) as avg_score'),
                 DB::raw('SUM(CASE WHEN e.result = "passed" THEN 1 ELSE 0 END) as passed'),
-                DB::raw('SUM(CASE WHEN e.result = "failed" THEN 1 ELSE 0 END) as failed'),
-                DB::raw('SUM(CASE WHEN e.result = "inconclusive" THEN 1 ELSE 0 END) as inconclusive')
+                DB::raw('SUM(CASE WHEN e.result = "failed" THEN 1 ELSE 0 END) as failed')
             )
             ->when($deptId, fn($q) => $q->whereExists(
                 fn($sub) => $sub->from('evaluation_departments as ed_f')
@@ -435,8 +431,7 @@ class ReportService
                 DB::raw('COUNT(*) as total'),
                 DB::raw('ROUND(AVG(e.score), 1) as avg_score'),
                 DB::raw('SUM(CASE WHEN e.result = "passed" THEN 1 ELSE 0 END) as passed'),
-                DB::raw('SUM(CASE WHEN e.result = "failed" THEN 1 ELSE 0 END) as failed'),
-                DB::raw('SUM(CASE WHEN e.result = "inconclusive" THEN 1 ELSE 0 END) as inconclusive')
+                DB::raw('SUM(CASE WHEN e.result = "failed" THEN 1 ELSE 0 END) as failed')
             )
             ->where('e.status', 'submitted')
             ->when($df,     fn($q) => $q->whereDate('e.submitted_at', '>=', $df))

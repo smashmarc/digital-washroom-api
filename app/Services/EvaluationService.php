@@ -10,6 +10,7 @@ use App\Models\EvaluationTemplate;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class EvaluationService extends BaseService
 {
@@ -177,6 +178,16 @@ class EvaluationService extends BaseService
                 throw new \Exception('Evaluation has already been submitted.');
             }
 
+            $eligible = EvaluationAnswer::where('evaluation_id', $evaluation->id)
+                ->whereIn('value', ['pass', 'fail'])
+                ->count();
+
+            if ($eligible === 0) {
+                throw ValidationException::withMessages([
+                    'answers' => ['At least one Pass or Fail answer is required before submitting.'],
+                ]);
+            }
+
             $this->recalculateScore($evaluation);
             $evaluation->refresh();
 
@@ -200,8 +211,8 @@ class EvaluationService extends BaseService
         $eligible = $answers->filter(fn($a) => $a->value !== 'na');
 
         if ($eligible->isEmpty()) {
-            $evaluation->score  = null;
-            $evaluation->result = 'inconclusive';
+            $evaluation->score  = 0;
+            $evaluation->result = 'failed';
             $evaluation->save();
             return;
         }
