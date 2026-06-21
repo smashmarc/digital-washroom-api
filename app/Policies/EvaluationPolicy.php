@@ -18,8 +18,17 @@ class EvaluationPolicy
         return null;
     }
 
-    public function view(User $user): bool
+    public function viewAny(User $user): bool
     {
+        return $user->hasPermissionTo(PermissionConstant::EVALUATION_VIEW);
+    }
+
+    public function view(User $user, Evaluation $model): bool
+    {
+        if ($model->user_id === $user->id) {
+            return $user->hasPermissionTo(PermissionConstant::EVALUATION_VIEW_HISTORY);            
+        }
+
         return $user->hasPermissionTo(PermissionConstant::EVALUATION_VIEW);
     }
 

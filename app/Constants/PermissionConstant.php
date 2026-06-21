@@ -104,8 +104,9 @@ class PermissionConstant
     public const EVALUATION_CREATE     = 'evaluation.create';
     public const EVALUATION_VIEW       = 'evaluation.view';
     public const EVALUATION_UPDATE     = 'evaluation.update';
-    public const EVALUATION_UPDATE_OWN = 'evaluation.update.own';
-    public const EVALUATION_DELETE     = 'evaluation.delete';
+    public const EVALUATION_UPDATE_OWN   = 'evaluation.update.own';
+    public const EVALUATION_VIEW_HISTORY = 'evaluation.view-history';
+    public const EVALUATION_DELETE       = 'evaluation.delete';
 
     /**
      * User Assignments Module
@@ -211,6 +212,7 @@ class PermissionConstant
             self::EVALUATION_VIEW,
             self::EVALUATION_UPDATE,
             self::EVALUATION_UPDATE_OWN,
+            self::EVALUATION_VIEW_HISTORY,
             self::EVALUATION_DELETE,
 
             // User Assignments

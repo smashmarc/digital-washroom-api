@@ -82,8 +82,9 @@ class PermissionSeeder extends Seeder
         PermissionConstant::EVALUATION_CREATE     => 'Start and create new evaluations',
         PermissionConstant::EVALUATION_VIEW       => 'View evaluations and their results',
         PermissionConstant::EVALUATION_UPDATE     => 'Edit and conduct any evaluation',
-        PermissionConstant::EVALUATION_UPDATE_OWN => 'Update own evaluation as the assigned evaluator',
-        PermissionConstant::EVALUATION_DELETE     => 'Delete evaluations',
+        PermissionConstant::EVALUATION_UPDATE_OWN   => 'Update own evaluation as the assigned evaluator',
+        PermissionConstant::EVALUATION_VIEW_HISTORY => 'View own evaluation history and results',
+        PermissionConstant::EVALUATION_DELETE        => 'Delete evaluations',
 
         // User Assignments
         PermissionConstant::USER_ASSIGNMENT_CREATE => 'Assign evaluations to users',

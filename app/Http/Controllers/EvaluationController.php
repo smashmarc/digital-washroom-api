@@ -23,9 +23,15 @@ class EvaluationController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        if (!Gate::any('view', new Evaluation())) {
-            abort(403);
+        $requestedUserId = (int) $request->input('user_id');
+        $isSelf = $requestedUserId && $requestedUserId === auth()->id();
+
+        if ($isSelf) {
+            Gate::authorize('view', new Evaluation(['user_id' => $requestedUserId]));
+        } else {
+            Gate::authorize('viewAny', Evaluation::class);
         }
+
         $params = $request->only(['search', 'sort_by', 'sort_dir', 'per_page', 'with', 'user_id', 'date_from', 'date_to']);
         $evaluations = $this->evaluationService->searchPaginatedList($params);
         return ApiResponse::success('Evaluations fetched successfully.', $evaluations, 200, EvaluationResource::class);
@@ -33,14 +39,14 @@ class EvaluationController extends Controller
 
     public function store(CreateEvaluationRequest $request): JsonResponse
     {
-        Gate::authorize('create', new Evaluation());
+        Gate::authorize('create', Evaluation::class);
         $evaluation = $this->evaluationService->create($request->validated());
         return ApiResponse::success('Evaluation created successfully.', new EvaluationResource($evaluation), 201);
     }
 
     public function show(Evaluation $evaluation): JsonResponse
     {
-        Gate::authorize('view', new Evaluation());
+        Gate::authorize('view', $evaluation);
         $evaluation->load(['user', 'template.criteria.category', 'evaluator', 'evaluationDepartments', 'answers.criteria.category', 'location', 'unit', 'updatedBy']);
         return ApiResponse::success('Evaluation fetched successfully.', new EvaluationResource($evaluation));
     }
