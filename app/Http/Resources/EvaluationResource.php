@@ -1,6 +1,5 @@
 <?php
 namespace App\Http\Resources;
-use App\Models\EvaluationDepartment;
 use Illuminate\Http\Resources\Json\JsonResource;
 class EvaluationResource extends JsonResource
 {
@@ -9,6 +8,11 @@ class EvaluationResource extends JsonResource
         return [
             'id'          => $this->id,
             'user_id'     => $this->user_id,
+            'department_id' => $this->department_id,
+            'department'  => $this->whenLoaded('department', fn() => [
+                'id'   => $this->department->id,
+                'name' => $this->department->name,
+            ]),
             'location_id' => $this->location_id,
             'location'    => $this->whenLoaded('location', fn() => [
                 'id'   => $this->location->id,
@@ -20,12 +24,6 @@ class EvaluationResource extends JsonResource
                 'name' => $this->unit->name,
             ]),
             'room_name'   => $this->room_name,
-            'departments' => $this->whenLoaded('evaluationDepartments', fn() =>
-                $this->evaluationDepartments->map(fn(EvaluationDepartment $ed) => [
-                    'id'   => $ed->department_id,
-                    'name' => $ed->name,
-                ])
-            ),
             'evaluation_template_id' => $this->evaluation_template_id,
             'user'                   => new UserResource($this->whenLoaded('user')),
             'template'               => new EvaluationTemplateResource($this->whenLoaded('template')),

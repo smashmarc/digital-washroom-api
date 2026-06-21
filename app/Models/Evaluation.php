@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Department;
 
 class Evaluation extends Model
 {
     protected $fillable = [
         'user_id',
+        'department_id',
         'location_id',
         'unit_id',
         'room_name',
@@ -65,8 +67,8 @@ class Evaluation extends Model
         return $this->hasMany(EvaluationAnswer::class);
     }
 
-    public function evaluationDepartments(): HasMany
+    public function department(): BelongsTo
     {
-        return $this->hasMany(EvaluationDepartment::class);
+        return $this->belongsTo(Department::class);
     }
 }

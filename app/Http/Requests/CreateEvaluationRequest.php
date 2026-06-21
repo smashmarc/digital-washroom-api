@@ -8,8 +8,10 @@ class CreateEvaluationRequest extends FormRequest
     {
         return [
             'user_id'                => 'required|integer|exists:users,id',
+            'department_id'          => 'required|integer|exists:departments,id',
             'evaluation_template_id' => 'required|integer|exists:evaluation_templates,id',
             'overall_notes'          => 'nullable|string',
+            'location_id'            => 'nullable|integer|exists:locations,id',
             'unit_id'                => 'nullable|integer|exists:units,id',
             'room_name'              => 'nullable|string|max:255',
         ];

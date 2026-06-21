@@ -290,12 +290,7 @@ class ReportService
             ->where('status', 'submitted')
             ->when($df,     fn($q) => $q->whereDate('submitted_at', '>=', $df))
             ->when($dt,     fn($q) => $q->whereDate('submitted_at', '<=', $dt))
-            ->when($deptId, fn($q) => $q->whereExists(
-                fn($sub) => $sub->from('evaluation_departments as ed_f')
-                    ->whereColumn('ed_f.evaluation_id', 'evaluations.id')
-                    ->where('ed_f.department_id', (int) $deptId)
-                    ->selectRaw('1')
-            ));
+            ->when($deptId, fn($q) => $q->where('department_id', (int) $deptId));
 
         $query = User::select('users.id', 'users.name')
             ->selectSub(fn($q) => $base($q)->selectRaw('COUNT(*)'),                                  'total_evaluations')
@@ -326,12 +321,7 @@ class ReportService
             ->where('status', 'submitted')
             ->when($df,     fn($q) => $q->whereDate('submitted_at', '>=', $df))
             ->when($dt,     fn($q) => $q->whereDate('submitted_at', '<=', $dt))
-            ->when($deptId, fn($q) => $q->whereExists(
-                fn($sub) => $sub->from('evaluation_departments as ed_f')
-                    ->whereColumn('ed_f.evaluation_id', 'evaluations.id')
-                    ->where('ed_f.department_id', (int) $deptId)
-                    ->selectRaw('1')
-            ));
+            ->when($deptId, fn($q) => $q->where('department_id', (int) $deptId));
 
         $query = EvaluationTemplate::select('evaluation_templates.id', 'evaluation_templates.name')
             ->selectSub(fn($q) => $base($q)->selectRaw('COUNT(*)'),                                  'total_evaluations')
@@ -357,12 +347,7 @@ class ReportService
             ->where('status', 'submitted')
             ->when($df,     fn($q) => $q->whereDate('submitted_at', '>=', $df))
             ->when($dt,     fn($q) => $q->whereDate('submitted_at', '<=', $dt))
-            ->when($deptId, fn($q) => $q->whereExists(
-                fn($sub) => $sub->from('evaluation_departments as ed_f')
-                    ->whereColumn('ed_f.evaluation_id', 'evaluations.id')
-                    ->where('ed_f.department_id', (int) $deptId)
-                    ->selectRaw('1')
-            ));
+            ->when($deptId, fn($q) => $q->where('department_id', (int) $deptId));
 
         $query = User::select('users.id', 'users.name')
             ->selectSub(fn($q) => $base($q)->selectRaw('COUNT(*)'),                                  'total_conducted')
@@ -391,12 +376,13 @@ class ReportService
         $unitId     = $params['unit_id']      ?? null;
 
         $query = DB::table('locations as l')
-            ->leftJoin('evaluations as e', function ($join) use ($df, $dt, $unitId) {
+            ->leftJoin('evaluations as e', function ($join) use ($df, $dt, $unitId, $deptId) {
                 $join->on('e.location_id', '=', 'l.id')
                      ->where('e.status', 'submitted');
                 if ($df)     $join->whereDate('e.submitted_at', '>=', $df);
                 if ($dt)     $join->whereDate('e.submitted_at', '<=', $dt);
                 if ($unitId) $join->where('e.unit_id', (int) $unitId);
+                if ($deptId) $join->where('e.department_id', (int) $deptId);
             })
             ->select(
                 'l.id',
@@ -407,16 +393,29 @@ class ReportService
                 DB::raw('SUM(CASE WHEN e.result = "failed" THEN 1 ELSE 0 END) as failed')
             )
             ->when($locationId, fn($q) => $q->where('l.id', (int) $locationId))
-            ->when($deptId, fn($q) => $q->whereExists(
-                fn($sub) => $sub->from('evaluation_departments as ed_f')
-                    ->whereColumn('ed_f.evaluation_id', 'e.id')
-                    ->where('ed_f.department_id', (int) $deptId)
-                    ->selectRaw('1')
-            ))
-            ->groupBy('l.id', 'l.name')
-            ->orderByDesc('total');
+            ->groupBy('l.id', 'l.name');
 
-        return $query->paginate($params['per_page'] ?? 25);
+        if (!$locationId) {
+            $nullQuery = DB::table('evaluations as e')
+                ->whereNull('e.location_id')
+                ->where('e.status', 'submitted')
+                ->select(
+                    DB::raw('NULL as id'),
+                    DB::raw('"No Location" as name'),
+                    DB::raw('COUNT(e.id) as total'),
+                    DB::raw('ROUND(AVG(e.score), 1) as avg_score'),
+                    DB::raw('SUM(CASE WHEN e.result = "passed" THEN 1 ELSE 0 END) as passed'),
+                    DB::raw('SUM(CASE WHEN e.result = "failed" THEN 1 ELSE 0 END) as failed')
+                );
+            if ($df)     $nullQuery->whereDate('e.submitted_at', '>=', $df);
+            if ($dt)     $nullQuery->whereDate('e.submitted_at', '<=', $dt);
+            if ($unitId) $nullQuery->where('e.unit_id', (int) $unitId);
+            if ($deptId) $nullQuery->where('e.department_id', (int) $deptId);
+
+            $query->unionAll($nullQuery);
+        }
+
+        return $query->orderByDesc('total')->paginate($params['per_page'] ?? 25);
     }
 
     // ── 9. QA — Department Summary ──────────────────────────────────
