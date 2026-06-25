@@ -79,6 +79,13 @@ class EvaluationController extends Controller
         return ApiResponse::success('Evaluation submitted successfully.', new EvaluationResource($evaluation));
     }
 
+    public function destroy(Evaluation $evaluation): JsonResponse
+    {
+        Gate::authorize('delete', $evaluation);
+        $evaluation->delete();
+        return ApiResponse::success('Evaluation deleted successfully.');
+    }
+
     public function getFormOptions(): JsonResponse
     {
         if (!Gate::any(['create', 'update'], Evaluation::class)) {

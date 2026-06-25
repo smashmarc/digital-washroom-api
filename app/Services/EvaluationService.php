@@ -227,7 +227,7 @@ class EvaluationService extends BaseService
             'statuses'      => ['draft', 'submitted'],
             'users'         => User::with('departments')->orderBy('name', 'asc')->get(),
             'departments'   => Department::orderBy('name', 'asc')->get(['id', 'name', 'enable_unit_option']),
-            'templates'     => EvaluationTemplate::where('is_active', true)->orderBy('name', 'asc')->get(['id', 'name', 'description', 'pass_score']),
+            'templates'     => EvaluationTemplate::where('is_active', true)->with('departments:id')->orderBy('name', 'asc')->get(['id', 'name', 'description', 'pass_score']),
             'units'         => \App\Models\Unit::orderBy('name', 'asc')->get(['id', 'name', 'location_id']),
             'rooms'         => \App\Models\Room::orderBy('name', 'asc')->get(['id', 'name', 'location_id']),
             'locations'     => \App\Models\Location::orderBy('name', 'asc')->get(['id', 'name']),

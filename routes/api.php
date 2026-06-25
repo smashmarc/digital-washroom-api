@@ -145,6 +145,7 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/',           [EvaluationController::class, 'store']);
         Route::get('{evaluation}',    [EvaluationController::class, 'show']);
         Route::put('{evaluation}',    [EvaluationController::class, 'update']);
+        Route::delete('{evaluation}', [EvaluationController::class, 'destroy']);
 
         // Save / upsert answers (recalculates score automatically)
         Route::post('{evaluation}/answers', [EvaluationController::class, 'saveAnswers']);

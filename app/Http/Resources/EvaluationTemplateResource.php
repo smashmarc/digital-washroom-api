@@ -15,6 +15,7 @@ class EvaluationTemplateResource extends JsonResource
             'creator'     => new UserResource($this->whenLoaded('creator')),
             'criteria'        => CriteriaResource::collection($this->whenLoaded('criteria')),
             'criteria_count'  => $this->whenCounted('criteria'),
+            'departments'     => $this->whenLoaded('departments', fn() => $this->departments->map(fn($d) => ['id' => $d->id, 'name' => $d->name])->values()),
             'created_at'  => $this->created_at,
             'updated_at'  => $this->updated_at,
         ];

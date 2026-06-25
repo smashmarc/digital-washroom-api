@@ -35,6 +35,11 @@ class EvaluationTemplate extends Model
                     ->withTimestamps();
     }
 
+    public function departments(): BelongsToMany
+    {
+        return $this->belongsToMany(Department::class, 'department_evaluation_template');
+    }
+
     public function userAssignments(): HasMany
     {
         return $this->hasMany(UserAssignment::class);

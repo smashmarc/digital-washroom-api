@@ -38,7 +38,7 @@ class EvaluationTemplateController extends Controller
     public function show(EvaluationTemplate $evaluationTemplate): JsonResponse
     {
         Gate::authorize('view', new EvaluationTemplate());
-        $evaluationTemplate->load('criteria.category', 'creator');
+        $evaluationTemplate->load('criteria.category', 'creator', 'departments');
         return ApiResponse::success('Evaluation template fetched successfully.', new EvaluationTemplateResource($evaluationTemplate));
     }
 

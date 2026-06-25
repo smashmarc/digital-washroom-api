@@ -33,8 +33,10 @@ class EvaluationTemplateService extends BaseService
                 'created_by'  => auth()->id(),
             ]);
 
+            $template->departments()->sync($data['department_ids'] ?? []);
+
             DB::commit();
-            return $template;
+            return $template->load('departments');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('EvaluationTemplateService::create failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'data' => $data]);
@@ -52,8 +54,12 @@ class EvaluationTemplateService extends BaseService
             $template->is_active   = $data['is_active'] ?? $template->is_active;
             $template->save();
 
+            if (array_key_exists('department_ids', $data)) {
+                $template->departments()->sync($data['department_ids'] ?? []);
+            }
+
             DB::commit();
-            return $template;
+            return $template->load('departments');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('EvaluationTemplateService::update failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'data' => $data, 'template_id' => $template->id]);
@@ -97,7 +103,8 @@ class EvaluationTemplateService extends BaseService
     public function getFormOptions(): array
     {
         return [
-            'criteria' => Criteria::where('is_active', true)->with('category')->get(),
+            'criteria'    => Criteria::where('is_active', true)->with('category')->get(),
+            'departments' => \App\Models\Department::orderBy('name')->get(['id', 'name']),
         ];
     }
 }

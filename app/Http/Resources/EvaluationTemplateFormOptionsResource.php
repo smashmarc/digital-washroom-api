@@ -6,7 +6,8 @@ class EvaluationTemplateFormOptionsResource extends JsonResource
     public function toArray($request): array
     {
         return [
-            'questions' => QuestionResource::collection($this->resource['questions']),
+            'criteria'    => CriteriaResource::collection($this->resource['criteria']),
+            'departments' => $this->resource['departments']->map(fn($d) => ['id' => $d->id, 'name' => $d->name])->values(),
         ];
     }
 }
