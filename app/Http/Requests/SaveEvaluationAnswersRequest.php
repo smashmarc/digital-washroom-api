@@ -11,6 +11,7 @@ class SaveEvaluationAnswersRequest extends FormRequest
             'answers.*.criteria_id' => 'required|integer|exists:criteria,id',
             'answers.*.value'       => 'required|in:pass,fail,na',
             'answers.*.notes'       => 'nullable|string',
+            'overall_notes'         => 'nullable|string',
         ];
     }
 }

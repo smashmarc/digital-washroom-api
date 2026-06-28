@@ -61,7 +61,8 @@ class EvaluationController extends Controller
     public function saveAnswers(SaveEvaluationAnswersRequest $request, Evaluation $evaluation): JsonResponse
     {
         Gate::authorize('update', $evaluation);
-        $evaluation = $this->evaluationService->saveAnswers($evaluation, $request->validated()['answers']);
+        $validated  = $request->validated();
+        $evaluation = $this->evaluationService->saveAnswers($evaluation, $validated['answers'], $validated['overall_notes'] ?? null);
         return ApiResponse::success('Answers saved successfully.', new EvaluationResource($evaluation->load(['answers.criteria', 'template'])));
     }
 

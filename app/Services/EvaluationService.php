@@ -105,10 +105,14 @@ class EvaluationService extends BaseService
         }
     }
 
-    public function saveAnswers(Evaluation $evaluation, array $answers): Evaluation
+    public function saveAnswers(Evaluation $evaluation, array $answers, ?string $overallNotes = null): Evaluation
     {
         DB::beginTransaction();
         try {
+            if ($overallNotes !== null) {
+                $evaluation->overall_notes = $overallNotes;
+            }
+
             $criteriaIds = array_column($answers, 'criteria_id');
             $criteriaMap = Criteria::whereIn('id', $criteriaIds)->get()->keyBy('id');
 
