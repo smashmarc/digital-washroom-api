@@ -64,12 +64,10 @@ class EvaluationService extends BaseService
             /** @var EvaluationTemplate $template */
             $template = EvaluationTemplate::findOrFail($data['evaluation_template_id']);
 
-            $department = \App\Models\Department::findOrFail($data['department_id']);
-
             $evaluation = Evaluation::create([
                 'user_id'                => $data['user_id'],
                 'department_id'          => $data['department_id'],
-                'location_id'            => $department->enable_unit_option ? ($data['location_id'] ?? null) : null,
+                'location_id'            => $data['location_id'] ?? null,
                 'unit_id'                => $data['unit_id'] ?? null,
                 'room_name'              => $data['room_name'] ?? null,
                 'evaluation_template_id' => $template->id,

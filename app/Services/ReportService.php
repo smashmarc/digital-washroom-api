@@ -384,6 +384,7 @@ class ReportService
                 if ($unitId) $join->where('e.unit_id', (int) $unitId);
                 if ($deptId) $join->where('e.department_id', (int) $deptId);
             })
+            ->when($locationId, fn($q) => $q->where('l.id', (int) $locationId))
             ->select(
                 'l.id',
                 'l.name',
@@ -392,28 +393,7 @@ class ReportService
                 DB::raw('SUM(CASE WHEN e.result = "passed" THEN 1 ELSE 0 END) as passed'),
                 DB::raw('SUM(CASE WHEN e.result = "failed" THEN 1 ELSE 0 END) as failed')
             )
-            ->when($locationId, fn($q) => $q->where('l.id', (int) $locationId))
             ->groupBy('l.id', 'l.name');
-
-        if (!$locationId) {
-            $nullQuery = DB::table('evaluations as e')
-                ->whereNull('e.location_id')
-                ->where('e.status', 'submitted')
-                ->select(
-                    DB::raw('NULL as id'),
-                    DB::raw('"No Location" as name'),
-                    DB::raw('COUNT(e.id) as total'),
-                    DB::raw('ROUND(AVG(e.score), 1) as avg_score'),
-                    DB::raw('SUM(CASE WHEN e.result = "passed" THEN 1 ELSE 0 END) as passed'),
-                    DB::raw('SUM(CASE WHEN e.result = "failed" THEN 1 ELSE 0 END) as failed')
-                );
-            if ($df)     $nullQuery->whereDate('e.submitted_at', '>=', $df);
-            if ($dt)     $nullQuery->whereDate('e.submitted_at', '<=', $dt);
-            if ($unitId) $nullQuery->where('e.unit_id', (int) $unitId);
-            if ($deptId) $nullQuery->where('e.department_id', (int) $deptId);
-
-            $query->unionAll($nullQuery);
-        }
 
         return $query->orderByDesc('total')->paginate($params['per_page'] ?? 25);
     }
