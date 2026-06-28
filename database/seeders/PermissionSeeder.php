@@ -21,11 +21,11 @@ class PermissionSeeder extends Seeder
         PermissionConstant::ROLE_UPDATE => 'Edit role details and manage assigned permissions',
         PermissionConstant::ROLE_DELETE => 'Delete roles',
 
-        // Permissions
-        PermissionConstant::PERMISSION_CREATE => 'Create new permissions',
-        PermissionConstant::PERMISSION_VIEW   => 'View all system permissions',
-        PermissionConstant::PERMISSION_UPDATE => 'Edit permission details',
-        PermissionConstant::PERMISSION_DELETE => 'Delete permissions',
+        // Permissions (no per-permission gates — admin-only via PermissionPolicy::manage())
+        // PermissionConstant::PERMISSION_CREATE => 'Create new permissions',
+        // PermissionConstant::PERMISSION_VIEW   => 'View all system permissions',
+        // PermissionConstant::PERMISSION_UPDATE => 'Edit permission details',
+        // PermissionConstant::PERMISSION_DELETE => 'Delete permissions',
 
         // Rooms
         PermissionConstant::ROOM_CREATE => 'Add new rooms',
@@ -86,11 +86,11 @@ class PermissionSeeder extends Seeder
         PermissionConstant::EVALUATION_VIEW_HISTORY => 'View own evaluation history and results',
         PermissionConstant::EVALUATION_DELETE        => 'Delete evaluations',
 
-        // User Assignments
-        PermissionConstant::USER_ASSIGNMENT_CREATE => 'Assign evaluations to users',
-        PermissionConstant::USER_ASSIGNMENT_VIEW   => 'View user evaluation assignments',
-        PermissionConstant::USER_ASSIGNMENT_UPDATE => 'Edit user assignment details',
-        PermissionConstant::USER_ASSIGNMENT_DELETE => 'Remove user evaluation assignments',
+        // User Assignments (table dropped — feature removed)
+        // PermissionConstant::USER_ASSIGNMENT_CREATE => 'Assign evaluations to users',
+        // PermissionConstant::USER_ASSIGNMENT_VIEW   => 'View user evaluation assignments',
+        // PermissionConstant::USER_ASSIGNMENT_UPDATE => 'Edit user assignment details',
+        // PermissionConstant::USER_ASSIGNMENT_DELETE => 'Remove user evaluation assignments',
 
         // Departments
         PermissionConstant::DEPARTMENT_CREATE => 'Create new departments',
