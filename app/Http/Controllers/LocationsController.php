@@ -20,6 +20,12 @@ class LocationsController extends Controller
         $this->locationService = $locationService;
     }
 
+    public function options(): JsonResponse
+    {
+        $items = Location::orderBy('name')->get(['id', 'name']);
+        return ApiResponse::success('Location options fetched successfully.', $items);
+    }
+
     public function index(Request $request): JsonResponse
     {
         Gate::authorize('view', new Location());

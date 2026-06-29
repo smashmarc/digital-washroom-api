@@ -58,7 +58,9 @@ class EvaluationTemplateController extends Controller
 
     public function attachCriteria(AttachCriteriaToTemplateRequest $request, EvaluationTemplate $evaluationTemplate): JsonResponse
     {
-        Gate::authorize('update', $evaluationTemplate);
+        if (!Gate::any(['create', 'update'], $evaluationTemplate)) {
+            abort(403);
+        }
         $template = $this->evaluationTemplateService->attachCriteria($evaluationTemplate, $request->validated()['criteria']);
         return ApiResponse::success('Criteria attached to template successfully.', new EvaluationTemplateResource($template->load('criteria.category')));
     }

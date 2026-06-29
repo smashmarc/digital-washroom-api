@@ -35,7 +35,9 @@ class RoomsController extends Controller
 
     public function show(Room $room): JsonResponse
     {
-        Gate::authorize('view', $room);
+        if (!Gate::any(['view', 'update'], $room)) {
+            abort(403);
+        }
         $room->load(['location', 'logs.user']);
         return ApiResponse::success('Room fetched successfully.', new RoomResource($room));
     }
@@ -56,7 +58,7 @@ class RoomsController extends Controller
 
     public function getFormOptions(): JsonResponse
     {
-        if (!Gate::any(['create', 'update'], Room::class)) {
+        if (!Gate::any(['create', 'update'], new Room())) {
             abort(403);
         }
         $formOptions = $this->roomService->getFormOptions();

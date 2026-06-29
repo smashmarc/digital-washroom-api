@@ -21,6 +21,12 @@ class UnitsController extends Controller
         $this->unitService = $unitService;
     }
 
+    public function options(): JsonResponse
+    {
+        $items = Unit::orderBy('name')->get(['id', 'name']);
+        return ApiResponse::success('Unit options fetched successfully.', $items);
+    }
+
     public function index(Request $request): JsonResponse
     {
         Gate::authorize('view', new Unit());

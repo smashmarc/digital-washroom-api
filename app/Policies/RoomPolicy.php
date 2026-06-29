@@ -34,17 +34,13 @@ class RoomPolicy
 
     public function update(User $user, ?Room $model = null): bool
     {
-        if ($model?->id == 1) {
-            return false;
-        }
+       
         return $user->hasPermissionTo(PermissionConstant::ROOM_UPDATE);
     }
 
     public function delete(User $user, Room $model): bool
     {
-        if ($model->id == 1) {
-            return false;
-        }
+      
         return $user->hasPermissionTo(PermissionConstant::ROOM_DELETE);
     }
 }

@@ -21,6 +21,12 @@ class DepartmentsController extends Controller
         $this->departmentService = $departmentService;
     }
 
+    public function options(): JsonResponse
+    {
+        $items = Department::orderBy('name')->get(['id', 'name']);
+        return ApiResponse::success('Department options fetched successfully.', $items);
+    }
+
     public function index(Request $request): JsonResponse
     {
         Gate::authorize('view', new Department());

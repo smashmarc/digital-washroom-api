@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ApiResponse;
+use App\Http\Requests\CreateAndSubmitEvaluationRequest;
 use App\Http\Requests\CreateEvaluationRequest;
 use App\Http\Requests\SaveEvaluationAnswersRequest;
 use App\Http\Requests\UpdateEvaluationAnswerRequest;
@@ -42,6 +43,13 @@ class EvaluationController extends Controller
         Gate::authorize('create', Evaluation::class);
         $evaluation = $this->evaluationService->create($request->validated());
         return ApiResponse::success('Evaluation created successfully.', new EvaluationResource($evaluation), 201);
+    }
+
+    public function storeAndSubmit(CreateAndSubmitEvaluationRequest $request): JsonResponse
+    {
+        Gate::authorize('create', Evaluation::class);
+        $evaluation = $this->evaluationService->createAndSubmit($request->validated());
+        return ApiResponse::success('Evaluation submitted successfully.', new EvaluationResource($evaluation), 201);
     }
 
     public function show(Evaluation $evaluation): JsonResponse

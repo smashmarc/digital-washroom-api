@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\ApiResponse;
 use App\Http\Requests\AttachePermissionsToRoleRequest;
 use App\Http\Requests\CreateRoleRequest;
+use App\Http\Requests\UpdateRoleRequest;
 use App\Http\Resources\RoleFormOptionsResource;
 use App\Http\Resources\RoleResource;
 use App\Models\Role;
@@ -41,7 +42,7 @@ class RolesController extends Controller
         return ApiResponse::success('Role fetched successfully.', new RoleResource($role));
     }
 
-    public function update(CreateRoleRequest $request, Role $role): JsonResponse
+    public function update(UpdateRoleRequest $request, Role $role): JsonResponse
     {
         Gate::authorize('update', $role);
         $role = $this->roleService->update($request->validated(), $role);
@@ -63,7 +64,7 @@ class RolesController extends Controller
 
     public function getFormOptions(): JsonResponse
     {
-        if (!Gate::any(['create', 'update'], Role::class)) {
+        if (!Gate::any(['create', 'update'], new Role())) {
             abort(403);
         }
         $formOptions = $this->roleService->getFormOptions();

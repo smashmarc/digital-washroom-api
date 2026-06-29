@@ -86,6 +86,67 @@ class EvaluationService extends BaseService
         }
     }
 
+    public function createAndSubmit(array $data): Evaluation
+    {
+        DB::beginTransaction();
+        try {
+            /** @var EvaluationTemplate $template */
+            $template = EvaluationTemplate::findOrFail($data['evaluation_template_id']);
+
+            $evaluation = Evaluation::create([
+                'user_id'                => $data['user_id'],
+                'department_id'          => $data['department_id'],
+                'location_id'            => $data['location_id'] ?? null,
+                'unit_id'                => $data['unit_id'] ?? null,
+                'room_name'              => $data['room_name'] ?? null,
+                'evaluation_template_id' => $template->id,
+                'evaluator_id'           => auth()->id(),
+                'pass_score'             => $template->pass_score,
+                'overall_notes'          => $data['overall_notes'] ?? null,
+                'status'                 => 'draft',
+            ]);
+
+            $criteriaIds = array_column($data['answers'], 'criteria_id');
+            $criteriaMap = Criteria::whereIn('id', $criteriaIds)->get()->keyBy('id');
+
+            foreach ($data['answers'] as $answerData) {
+                $c = $criteriaMap->get($answerData['criteria_id']);
+                EvaluationAnswer::create([
+                    'evaluation_id'     => $evaluation->id,
+                    'criteria_id'       => $answerData['criteria_id'],
+                    'value'             => $answerData['value'],
+                    'notes'             => $answerData['notes'] ?? null,
+                    'criteria_snapshot' => $c?->text,
+                ]);
+            }
+
+            $this->recalculateScore($evaluation);
+            $evaluation->refresh();
+
+            $eligible = EvaluationAnswer::where('evaluation_id', $evaluation->id)
+                ->whereIn('value', ['pass', 'fail'])
+                ->count();
+
+            if ($eligible === 0) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'answers' => ['At least one Pass or Fail answer is required before submitting.'],
+                ]);
+            }
+
+            $evaluation->status       = 'submitted';
+            $evaluation->submitted_at = now();
+            $evaluation->updated_by   = auth()->id();
+            $evaluation->save();
+
+            DB::commit();
+            return $evaluation->load(['answers.criteria', 'user', 'template', 'evaluator', 'department', 'location', 'unit']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('EvaluationService::createAndSubmit failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'data' => $data]);
+            throw $e;
+        }
+    }
+
     public function update(array $data, Evaluation $evaluation): Evaluation
     {
         DB::beginTransaction();

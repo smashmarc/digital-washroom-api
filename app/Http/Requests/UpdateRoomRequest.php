@@ -2,16 +2,13 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Room;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRoomRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        Gate::authorize('update', Room::class);
         return true;
     }
 

@@ -6,8 +6,10 @@ use App\Helpers\ApiResponse;
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\UploadUserRequest;
+use App\Http\Resources\EvaluationResource;
 use App\Http\Resources\UserFormOptionsResource;
 use App\Http\Resources\UserResource;
+use App\Models\Evaluation;
 use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +20,22 @@ use Illuminate\Support\Facades\Hash;
 class UsersController extends Controller
 {
     public function __construct(protected UserService $userService) {}
+
+    public function evaluations(User $user): JsonResponse
+    {
+        Gate::authorize('view', $user);
+        $evaluations = Evaluation::where('user_id', $user->id)
+            ->with(['template', 'evaluator'])
+            ->orderBy('id', 'desc')
+            ->paginate(50);
+        return ApiResponse::success('User evaluations fetched successfully.', $evaluations, 200, EvaluationResource::class);
+    }
+
+    public function options(): JsonResponse
+    {
+        $items = User::orderBy('name')->get(['id', 'name']);
+        return ApiResponse::success('User options fetched successfully.', $items);
+    }
 
     public function index(Request $request): JsonResponse
     {

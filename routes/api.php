@@ -140,9 +140,10 @@ Route::middleware('auth:api')->group(function () {
 
     // ── Evaluations ──────────────────────────────────────────────────────
     Route::prefix('evaluations')->group(function () {
-        Route::get('form-options', [EvaluationController::class, 'getFormOptions']);
-        Route::get('/',            [EvaluationController::class, 'index']);
-        Route::post('/',           [EvaluationController::class, 'store']);
+        Route::get('form-options',   [EvaluationController::class, 'getFormOptions']);
+        Route::post('create-submit', [EvaluationController::class, 'storeAndSubmit']);
+        Route::get('/',              [EvaluationController::class, 'index']);
+        Route::post('/',             [EvaluationController::class, 'store']);
         Route::get('{evaluation}',    [EvaluationController::class, 'show']);
         Route::put('{evaluation}',    [EvaluationController::class, 'update']);
         Route::delete('{evaluation}', [EvaluationController::class, 'destroy']);
@@ -172,14 +173,19 @@ Route::middleware('auth:api')->group(function () {
     /**
      * Route Resource should be in Bottom to avoid overriding
      */
+    Route::get('departments/options', [DepartmentsController::class, 'options']);
     Route::apiResource('departments', DepartmentsController::class);
+    Route::get('units/options', [UnitsController::class, 'options']);
     Route::apiResource('units', UnitsController::class);
+    Route::get('locations/options', [LocationsController::class, 'options']);
     Route::apiResource('locations', LocationsController::class);
     //override for patch method spoofing
     Route::post('/locations/{location}', [LocationsController::class, 'update']);
     Route::apiResource('rooms', RoomsController::class);
     Route::get('logs/export', [LogsController::class, 'export']);
     Route::apiResource('logs', LogsController::class);
+    Route::get('users/options', [UsersController::class, 'options']);
+    Route::get('users/{user}/evaluations', [UsersController::class, 'evaluations']);
     Route::apiResource('users', UsersController::class);
     Route::apiResource('permissions', PermissionController::class);
     Route::apiResource('roles', RolesController::class);

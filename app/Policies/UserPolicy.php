@@ -17,9 +17,8 @@ class UserPolicy
         return null;
     }
 
-    public function view(User $user): bool
+    public function view(User $user, ?User $model = null): bool
     {
-       
         return $user->hasPermissionTo(PermissionConstant::USER_VIEW);
     }
 
