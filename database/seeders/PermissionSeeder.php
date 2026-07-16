@@ -103,6 +103,9 @@ class PermissionSeeder extends Seeder
         PermissionConstant::UNIT_VIEW   => 'View units and the unit list',
         PermissionConstant::UNIT_UPDATE => 'Edit unit details',
         PermissionConstant::UNIT_DELETE => 'Delete units',
+
+        // Home / Dashboard
+        PermissionConstant::HOME_VIEW_KPI => 'View KPI tiles on the home dashboard',
     ];
 
     public function run(): void

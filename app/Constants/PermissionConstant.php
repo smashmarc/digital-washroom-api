@@ -133,6 +133,11 @@ class PermissionConstant
     public const UNIT_DELETE = 'unit.delete';
 
     /**
+     * Home / Dashboard
+     */
+    public const HOME_VIEW_KPI = 'home.view-kpi';
+
+    /**
      * Return all permissions
      */
     public static function all(): array
@@ -232,6 +237,9 @@ class PermissionConstant
             self::UNIT_VIEW,
             self::UNIT_UPDATE,
             self::UNIT_DELETE,
+
+            // Home / Dashboard
+            self::HOME_VIEW_KPI,
         ];
     }
 }
