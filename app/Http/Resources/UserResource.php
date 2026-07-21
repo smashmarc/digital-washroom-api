@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\DepartmentResource;
 
 class UserResource extends JsonResource
 {
@@ -18,7 +19,8 @@ class UserResource extends JsonResource
             'roles' => RoleResource::collection($this->whenLoaded('roles')),
             'location_id'=> $this->location_id,
             'username'=>$this->username,
-            'location'=>new LocationResource($this->whenLoaded('location')),
+            'location' => new LocationResource($this->whenLoaded('location')),
+            'departments' => DepartmentResource::collection($this->whenLoaded('departments')),
         ];
     }
 }

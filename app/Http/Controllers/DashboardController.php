@@ -8,117 +8,97 @@ use App\Models\User;
 use App\Models\Location;
 use App\Helpers\ApiResponse;
 use App\Http\Resources\DashboardResource;
+use App\Http\Resources\RoomResource;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-     
-
+        $dateFrom = Carbon::parse($request->query('date_from'))->utc();
+        $dateTo   = Carbon::parse($request->query('date_to'))->utc();
 
         $locationsCount = Location::count();
 
         // total rooms
         $roomsCount = Room::count();
 
-        // rooms cleaned today (logs with note_code != 0)
-        $roomsCleanedToday = Room::whereHas('logs', function ($q) {
-            $q->whereDate('created_at', today())
+        // rooms cleaned today
+        $roomsCleanedToday = Room::whereHas('logs', function ($q) use ($dateFrom, $dateTo) {
+            $q->whereBetween('logged_at', [$dateFrom, $dateTo])
                 ->where('note_code', '!=', 0);
-        })
-            ->count();
+        })->count();
 
-        // rooms needing attention (no log in last 24h)
-        $roomsNeedingAttention = Room::whereDoesntHave('logs', function ($q) {
+        // rooms needing attention (no cleaning log today)
+        $roomsNeedingAttention = Room::whereDoesntHave('logs', function ($q) use ($dateFrom, $dateTo) {
             $q->where('note_code', '!=', 0)
-                ->where('created_at', '>=', now()->subHours(24));
-        })
-            ->count();
-
-        // cleaning trend (logs per day, last 7 days)
-        $cleaningTrend = Log::query()
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
-            ->where('note_code', '!=', 0)
-            ->where('created_at', '>=', now()->subDays(7))
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-
-        // logs by location (using relationships instead of raw joins)
-        $logsByLocation = Location::withCount(['rooms as total' => function ($q) {
-            $q->join('logs', 'rooms.id', '=', 'logs.room_id');
-        }])
-            ->get(['id', 'name']);
+                ->whereBetween('logged_at', [$dateFrom, $dateTo]);
+        })->count();
 
         // total users
         $totalUsers = User::count();
 
-        // active users today (who created logs today)
-        $activeUsersToday = User::whereHas('logs', function ($q) {
-            $q->whereDate('created_at', today());
-        })
-            ->count();
+        // active users today
+        $activeUsersToday = User::whereHas('logs', function ($q) use ($dateFrom, $dateTo) {
+            $q->whereBetween('logged_at', [$dateFrom, $dateTo]);
+        })->count();
 
         // logs created today
-        $logsToday = Log::whereDate('created_at', today())->count();
+        $logsToday = Log::whereBetween('logged_at', [$dateFrom, $dateTo])->count();
 
         // top active user today
-        $topUserToday = User::withCount(['logs as logs_today' => function ($q) {
-            $q->whereDate('created_at', today());
+        $topUserToday = User::withCount(['logs as logs_today' => function ($q) use ($dateFrom, $dateTo) {
+            $q->whereBetween('logged_at', [$dateFrom, $dateTo]);
         }])
             ->orderByDesc('logs_today')
             ->first(['id', 'name', 'username']);
 
-        // logs per user (last 7 days, top 5)
-        // uncomment if needed
-        // $logsPerUser = User::withCount(['logs as total' => function ($q) {
-        //     $q->where('created_at', '>=', now()->subDays(7));
+        $logsPerUser = [];
+
+        // $cleaningTrend = Log::query()
+        //     ->selectRaw('DATE(logged_at) as date, COUNT(*) as total')
+        //     ->where('note_code', '!=', 0)
+        //     ->where('logged_at', '>=', now()->subDays(7))
+        //     ->groupBy('date')
+        //     ->orderBy('date')
+        //     ->get();
+
+        // $logsByLocation = Location::withCount(['rooms as total' => function ($q) {
+        //     $q->join('logs', 'rooms.id', '=', 'logs.room_id');
+        // }])->get(['id', 'name']);
+
+        // $userActivityTrend = Log::query()
+        //     ->selectRaw('DATE(logged_at) as date, COUNT(DISTINCT user_id) as total_users')
+        //     ->where('logged_at', '>=', now()->subDays(7))
+        //     ->groupBy('date')
+        //     ->orderBy('date')
+        //     ->get();
+
+        // $topUsersThisMonth = User::withCount(['logs as total_logs' => function ($q) {
+        //     $q->whereMonth('logged_at', now()->month)
+        //         ->whereYear('logged_at', now()->year);
         // }])
-        //     ->orderByDesc('total')
-        //     ->take(5)
+        //     ->orderByDesc('total_logs')
+        //     ->take(10)
         //     ->get(['id', 'name']);
-        $logsPerUser=[];
 
-        // user activity trend (active users per day)
-        $userActivityTrend = Log::query()
-            ->selectRaw('DATE(created_at) as date, COUNT(DISTINCT user_id) as total_users')
-            ->where('created_at', '>=', now()->subDays(7))
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+        // $latestUserActions = Log::with(['room.location', 'user'])
+        //     ->latest('logged_at')
+        //     ->take(10)
+        //     ->get();
 
-        // top users by logs (this month)
-        $topUsersThisMonth = User::withCount(['logs as total_logs' => function ($q) {
-            $q->whereMonth('created_at', now()->month);
-        }])
-            ->orderByDesc('total_logs')
-            ->take(10)
-            ->get(['id', 'name']);
+        // $recentCleaningLogs = Log::with(['room.location', 'user'])
+        //     ->where('note_code', '!=', 4)
+        //     ->latest('logged_at')
+        //     ->take(10)
+        //     ->get();
 
-        // latest user actions (activity feed)
-        $latestUserActions = Log::with(['room.location', 'user'])
-            ->latest()
-            ->take(10)
-            ->get();
-
-        // recent cleaning logs
-        $recentCleaningLogs = Log::with(['room.location', 'user'])
-            ->where('note_code', '!=', 4)
-            ->latest()
-            ->take(10)
-            ->get();
-
-        // rooms overdue (no cleaning log in last 24h)
-        $roomsOverdue = Room::whereDoesntHave('logs', function ($q) {
-            $q->where('note_code', '!=', 0)
-                ->where('created_at', '>=', now()->subHours(24));
-        })
-            ->with('location')
-            ->get();
-
-
+        // $roomsOverdue = Room::whereDoesntHave('logs', function ($q) {
+        //     $q->where('note_code', '!=', 0)
+        //         ->where('logged_at', '>=', now()->subHours(24));
+        // })->with('location')->get();
 
         $items = [
             'operations' => [
@@ -126,10 +106,10 @@ class DashboardController extends Controller
                 'rooms_count' => $roomsCount,
                 'rooms_cleaned_today' => $roomsCleanedToday,
                 'rooms_needing_attention' => $roomsNeedingAttention,
-                'cleaning_trend' => $cleaningTrend,
-                'logs_by_location' => $logsByLocation,
-                'recent_cleaning_logs' => $recentCleaningLogs,
-                'rooms_overdue' => $roomsOverdue,
+                // 'cleaning_trend' => $cleaningTrend,
+                // 'logs_by_location' => $logsByLocation,
+                // 'recent_cleaning_logs' => $recentCleaningLogs,
+                // 'rooms_overdue' => $roomsOverdue,
             ],
             'users' => [
                 'total_users' => $totalUsers,
@@ -137,9 +117,9 @@ class DashboardController extends Controller
                 'logs_today' => $logsToday,
                 'top_user_today' => $topUserToday,
                 'logs_per_user' => $logsPerUser,
-                'user_activity_trend' => $userActivityTrend,
-                'top_users_this_month' => $topUsersThisMonth,
-                'latest_user_actions' => $latestUserActions,
+                // 'user_activity_trend' => $userActivityTrend,
+                // 'top_users_this_month' => $topUsersThisMonth,
+                // 'latest_user_actions' => $latestUserActions,
             ]
         ];
 
@@ -147,6 +127,35 @@ class DashboardController extends Controller
             'dashboard data fetched.',
             new DashboardResource($items),
             200
+        );
+    }
+
+    public function needsAttention(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $dateFrom = Carbon::parse($request->query('date_from'))->utc();
+        $dateTo   = Carbon::parse($request->query('date_to'))->utc();
+        $search   = trim((string) $request->query('search', ''));
+        $perPage  = max(1, (int) $request->query('per_page', 25));
+
+        $rooms = Room::whereDoesntHave('logs', function ($q) use ($dateFrom, $dateTo) {
+            $q->where('note_code', '!=', 0)
+                ->whereBetween('logged_at', [$dateFrom, $dateTo]);
+        })
+            ->with('location')
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($sq) use ($search) {
+                    $sq->where('name', 'like', "%{$search}%")
+                        ->orWhereHas('location', fn($lq) => $lq->where('name', 'like', "%{$search}%"));
+                });
+            })
+            ->orderBy('name')
+            ->paginate($perPage);
+
+        return ApiResponse::success(
+            'Rooms needing attention fetched.',
+            $rooms,
+            200,
+            RoomResource::class
         );
     }
 }

@@ -5,6 +5,7 @@ namespace App\Services;
 use Exception;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Department;
 use App\Models\Location;
 use App\Constants\Role as RoleConstant;
 use Illuminate\Support\Arr;
@@ -19,13 +20,36 @@ class UserService extends BaseService
         parent::__construct($model);
     }
 
-    /**
-     * List roles with custom searchable columns.
-     */
     public function searchPaginatedList(array $params = [], $columns = [])
     {
-        $params['searchableColumns'] = ['name','username','email','roles.name','location.name'];
-        return parent::list($params);
+        $sortDir = in_array(strtolower($params['sort_dir'] ?? ''), ['asc', 'desc'])
+            ? strtolower($params['sort_dir'])
+            : 'asc';
+
+        $query = User::query();
+
+        if (!empty($params['with']) && is_array($params['with'])) {
+            $query->with($params['with']);
+        }
+
+        if (!empty($params['department_id'])) {
+            $query->whereHas('departments', fn($q) => $q->where('departments.id', (int) $params['department_id']));
+        }
+
+        if (!empty($params['search'])) {
+            $search = trim($params['search']);
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhereHas('roles', fn($r) => $r->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('location', fn($l) => $l->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('departments', fn($d) => $d->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        return $query->orderBy($params['sort_by'] ?? 'id', $sortDir)
+                     ->paginate(max(1, (int) ($params['per_page'] ?? 10)));
     }
 
     public function getFormOptions()
@@ -38,7 +62,8 @@ class UserService extends BaseService
             })->get();
 
             $locations = Location::all();
-            return ['roles' => $roles, 'locations' => $locations];
+            $departments = Department::orderBy('name')->get();
+            return ['roles' => $roles, 'locations' => $locations, 'departments' => $departments];
         } catch (Exception $e) {
             Log::error('Failed to fetch form options ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
@@ -54,9 +79,11 @@ class UserService extends BaseService
         DB::beginTransaction();
         try {
             $user = User::create($data);
-            // Assign roles if provided
             if (isset($data['roles'])) {
                 $user->syncRoles($data['roles']);
+            }
+            if (isset($data['departments'])) {
+                $user->departments()->sync($data['departments']);
             }
             DB::commit();
             return $user;
@@ -79,6 +106,9 @@ class UserService extends BaseService
             $user->update($data);
             if (isset($data['roles'])) {
                 $user->syncRoles($data['roles']);
+            }
+            if (isset($data['departments'])) {
+                $user->departments()->sync($data['departments']);
             }
 
             DB::commit();

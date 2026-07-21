@@ -14,7 +14,8 @@ class ApiResponse
         mixed $payload = null,
         mixed $errors = null,
         int $status = 200,
-        ?string $resource = null
+        ?string $resource = null,
+        ?string $errorCode = null
     ): JsonResponse {
         $items = [];
         $meta = [
@@ -55,7 +56,7 @@ class ApiResponse
             $meta['total'] = 1;
         }
 
-        return response()->json([
+        $response = [
             'success' => $success,
             'message' => $message,
             'errors'  => $errors,
@@ -63,7 +64,13 @@ class ApiResponse
                 'items' => $items,
                 'meta'  => $meta,
             ],
-        ], $status);
+        ];
+
+        if ($errorCode !== null) {
+            $response['error_code'] = $errorCode;
+        }
+
+        return response()->json($response, $status);
     }
 
     public static function success(string $message, mixed $payload = null, int $status = 200, ?string $resource = null): JsonResponse
@@ -71,8 +78,8 @@ class ApiResponse
         return self::respond(true, $message, $payload, null, $status, $resource);
     }
 
-    public static function error(string $message, int $status = 400, mixed $errors = null): JsonResponse
+    public static function error(string $message, int $status = 400, mixed $errors = null, ?string $errorCode = null): JsonResponse
     {
-        return self::respond(false, $message, [], $errors, $status);
+        return self::respond(false, $message, [], $errors, $status, null, $errorCode);
     }
 }

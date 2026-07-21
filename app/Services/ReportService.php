@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\EvaluationTemplate;
 use App\Models\Log as LogModel;
 use App\Models\Room;
 use App\Models\User;
@@ -211,5 +212,217 @@ class ReportService
     {
         return $this->locationSummary(array_merge($params, ['per_page' => PHP_INT_MAX]))
                     ->getCollection();
+    }
+
+    // ── 5. Location Detail (room-by-room for a location) ────────────
+
+    public function locationDetail(array $params = [])
+    {
+        $query = Room::select('rooms.*')
+            ->with('location')
+            ->selectSub(
+                fn($q) => $q->from('logs')
+                    ->whereColumn('room_id', 'rooms.id')
+                    ->when(!empty($params['date_from']), fn($q) => $q->whereDate('logged_at', '>=', $params['date_from']))
+                    ->when(!empty($params['date_to']),   fn($q) => $q->whereDate('logged_at', '<=', $params['date_to']))
+                    ->selectRaw('COUNT(*)'),
+                'total_logs'
+            )
+            ->selectSub(
+                fn($q) => $q->from('logs')
+                    ->whereColumn('room_id', 'rooms.id')
+                    ->where('note_code', 2)
+                    ->when(!empty($params['date_from']), fn($q) => $q->whereDate('logged_at', '>=', $params['date_from']))
+                    ->when(!empty($params['date_to']),   fn($q) => $q->whereDate('logged_at', '<=', $params['date_to']))
+                    ->selectRaw('COUNT(*)'),
+                'fully_cleaned'
+            )
+            ->selectSub(
+                fn($q) => $q->from('logs')
+                    ->whereColumn('room_id', 'rooms.id')
+                    ->where('note_code', 1)
+                    ->when(!empty($params['date_from']), fn($q) => $q->whereDate('logged_at', '>=', $params['date_from']))
+                    ->when(!empty($params['date_to']),   fn($q) => $q->whereDate('logged_at', '<=', $params['date_to']))
+                    ->selectRaw('COUNT(*)'),
+                'partially_cleaned'
+            )
+            ->selectSub(
+                fn($q) => $q->from('logs')
+                    ->whereColumn('room_id', 'rooms.id')
+                    ->where('note_code', 0)
+                    ->when(!empty($params['date_from']), fn($q) => $q->whereDate('logged_at', '>=', $params['date_from']))
+                    ->when(!empty($params['date_to']),   fn($q) => $q->whereDate('logged_at', '<=', $params['date_to']))
+                    ->selectRaw('COUNT(*)'),
+                'not_cleaned'
+            )
+            ->selectSub(
+                fn($q) => $q->from('logs')
+                    ->whereColumn('room_id', 'rooms.id')
+                    ->selectRaw('MAX(logged_at)'),
+                'last_cleaned'
+            );
+
+        if (!empty($params['location_id'])) {
+            $query->where('location_id', $params['location_id']);
+        }
+
+        return $query->orderBy('rooms.location_id')
+                     ->orderBy('rooms.name')
+                     ->paginate($params['per_page'] ?? 25);
+    }
+
+    public function locationDetailExport(array $params = [])
+    {
+        return $this->locationDetail(array_merge($params, ['per_page' => PHP_INT_MAX]))
+                    ->getCollection();
+    }
+
+    // ── 6. QA — Employee Performance ────────────────────────────────
+
+    public function qaEmployeePerformance(array $params = [])
+    {
+        $df     = $params['date_from']    ?? null;
+        $dt     = $params['date_to']      ?? null;
+        $deptId = $params['department_id'] ?? null;
+
+        $base = fn($q) => $q->from('evaluations')
+            ->whereColumn('user_id', 'users.id')
+            ->where('status', 'submitted')
+            ->when($df,     fn($q) => $q->whereDate('submitted_at', '>=', $df))
+            ->when($dt,     fn($q) => $q->whereDate('submitted_at', '<=', $dt))
+            ->when($deptId, fn($q) => $q->where('department_id', (int) $deptId));
+
+        $query = User::select('users.id', 'users.name')
+            ->selectSub(fn($q) => $base($q)->selectRaw('COUNT(*)'),                                  'total_evaluations')
+            ->selectSub(fn($q) => $base($q)->selectRaw('ROUND(AVG(score), 1)'),                      'avg_score')
+            ->selectSub(fn($q) => $base($q)->where('result', 'passed')->selectRaw('COUNT(*)'), 'passed')
+            ->selectSub(fn($q) => $base($q)->where('result', 'failed')->selectRaw('COUNT(*)'),  'failed')
+            ->selectSub(fn($q) => $base($q)->selectRaw('MAX(submitted_at)'),                    'last_evaluated')
+            ->having('total_evaluations', '>', 0);
+
+        if (!empty($params['user_id'])) {
+            $query->where('users.id', (int) $params['user_id']);
+        }
+
+        return $query->orderByDesc('total_evaluations')
+                     ->paginate($params['per_page'] ?? 25);
+    }
+
+    // ── 6. QA — Template Analysis ───────────────────────────────────
+
+    public function qaTemplateAnalysis(array $params = [])
+    {
+        $df     = $params['date_from']    ?? null;
+        $dt     = $params['date_to']      ?? null;
+        $deptId = $params['department_id'] ?? null;
+
+        $base = fn($q) => $q->from('evaluations')
+            ->whereColumn('evaluation_template_id', 'evaluation_templates.id')
+            ->where('status', 'submitted')
+            ->when($df,     fn($q) => $q->whereDate('submitted_at', '>=', $df))
+            ->when($dt,     fn($q) => $q->whereDate('submitted_at', '<=', $dt))
+            ->when($deptId, fn($q) => $q->where('department_id', (int) $deptId));
+
+        $query = EvaluationTemplate::select('evaluation_templates.id', 'evaluation_templates.name')
+            ->selectSub(fn($q) => $base($q)->selectRaw('COUNT(*)'),                                  'total_evaluations')
+            ->selectSub(fn($q) => $base($q)->selectRaw('ROUND(AVG(score), 1)'),                      'avg_score')
+            ->selectSub(fn($q) => $base($q)->where('result', 'passed')->selectRaw('COUNT(*)'), 'passed')
+            ->selectSub(fn($q) => $base($q)->where('result', 'failed')->selectRaw('COUNT(*)'),  'failed')
+            ->having('total_evaluations', '>', 0);
+
+        return $query->orderByDesc('total_evaluations')
+                     ->paginate($params['per_page'] ?? 25);
+    }
+
+    // ── 7. QA — Evaluator Activity ──────────────────────────────────
+
+    public function qaEvaluatorActivity(array $params = [])
+    {
+        $df     = $params['date_from']    ?? null;
+        $dt     = $params['date_to']      ?? null;
+        $deptId = $params['department_id'] ?? null;
+
+        $base = fn($q) => $q->from('evaluations')
+            ->whereColumn('evaluator_id', 'users.id')
+            ->where('status', 'submitted')
+            ->when($df,     fn($q) => $q->whereDate('submitted_at', '>=', $df))
+            ->when($dt,     fn($q) => $q->whereDate('submitted_at', '<=', $dt))
+            ->when($deptId, fn($q) => $q->where('department_id', (int) $deptId));
+
+        $query = User::select('users.id', 'users.name')
+            ->selectSub(fn($q) => $base($q)->selectRaw('COUNT(*)'),                                  'total_conducted')
+            ->selectSub(fn($q) => $base($q)->selectRaw('ROUND(AVG(score), 1)'),                      'avg_score')
+            ->selectSub(fn($q) => $base($q)->where('result', 'passed')->selectRaw('COUNT(*)'), 'passed')
+            ->selectSub(fn($q) => $base($q)->where('result', 'failed')->selectRaw('COUNT(*)'),  'failed')
+            ->selectSub(fn($q) => $base($q)->selectRaw('MAX(submitted_at)'),                    'last_conducted')
+            ->having('total_conducted', '>', 0);
+
+        if (!empty($params['user_id'])) {
+            $query->where('users.id', (int) $params['user_id']);
+        }
+
+        return $query->orderByDesc('total_conducted')
+                     ->paginate($params['per_page'] ?? 25);
+    }
+
+    // ── 8. QA — Location Summary ────────────────────────────────────
+
+    public function qaLocationSummary(array $params = [])
+    {
+        $df         = $params['date_from']    ?? null;
+        $dt         = $params['date_to']      ?? null;
+        $deptId     = $params['department_id'] ?? null;
+        $locationId = $params['location_id']  ?? null;
+        $unitId     = $params['unit_id']      ?? null;
+
+        $query = DB::table('locations as l')
+            ->leftJoin('evaluations as e', function ($join) use ($df, $dt, $unitId, $deptId) {
+                $join->on('e.location_id', '=', 'l.id')
+                     ->where('e.status', 'submitted');
+                if ($df)     $join->whereDate('e.submitted_at', '>=', $df);
+                if ($dt)     $join->whereDate('e.submitted_at', '<=', $dt);
+                if ($unitId) $join->where('e.unit_id', (int) $unitId);
+                if ($deptId) $join->where('e.department_id', (int) $deptId);
+            })
+            ->when($locationId, fn($q) => $q->where('l.id', (int) $locationId))
+            ->select(
+                'l.id',
+                'l.name',
+                DB::raw('COUNT(e.id) as total'),
+                DB::raw('ROUND(AVG(e.score), 1) as avg_score'),
+                DB::raw('SUM(CASE WHEN e.result = "passed" THEN 1 ELSE 0 END) as passed'),
+                DB::raw('SUM(CASE WHEN e.result = "failed" THEN 1 ELSE 0 END) as failed')
+            )
+            ->groupBy('l.id', 'l.name');
+
+        return $query->orderByDesc('total')->paginate($params['per_page'] ?? 25);
+    }
+
+    // ── 9. QA — Department Summary ──────────────────────────────────
+
+    public function qaDepartmentSummary(array $params = [])
+    {
+        $df     = $params['date_from']    ?? null;
+        $dt     = $params['date_to']      ?? null;
+        $deptId = $params['department_id'] ?? null;
+
+        $query = DB::table('evaluation_departments as ed')
+            ->join('evaluations as e', 'e.id', '=', 'ed.evaluation_id')
+            ->select(
+                'ed.department_id as id',
+                'ed.name',
+                DB::raw('COUNT(*) as total'),
+                DB::raw('ROUND(AVG(e.score), 1) as avg_score'),
+                DB::raw('SUM(CASE WHEN e.result = "passed" THEN 1 ELSE 0 END) as passed'),
+                DB::raw('SUM(CASE WHEN e.result = "failed" THEN 1 ELSE 0 END) as failed')
+            )
+            ->where('e.status', 'submitted')
+            ->when($df,     fn($q) => $q->whereDate('e.submitted_at', '>=', $df))
+            ->when($dt,     fn($q) => $q->whereDate('e.submitted_at', '<=', $dt))
+            ->when($deptId, fn($q) => $q->where('ed.department_id', (int) $deptId))
+            ->groupBy('ed.department_id', 'ed.name')
+            ->orderByDesc('total');
+
+        return $query->paginate($params['per_page'] ?? 25);
     }
 }

@@ -24,7 +24,11 @@ class UpdateLocationRequest extends FormRequest
                 'max:100',
                 Rule::unique('locations', 'name')->ignore($this->route('location')->id),
             ],
-            'address' => 'required|string',
+            'branding_title'  => 'nullable|string|max:150',
+            'address'         => 'required|string',
+            'logo'            => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048',
+            'remove_logo'     => 'nullable|boolean',
+
         ];
     }
 

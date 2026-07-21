@@ -85,4 +85,9 @@ class User extends  Authenticatable implements JWTSubject
     {
         return $this->belongsTo(Location::class);
     }
+
+    public function departments()
+    {
+        return $this->belongsToMany(Department::class);
+    }
 }

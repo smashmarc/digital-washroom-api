@@ -34,7 +34,7 @@ class AuthController extends Controller
      */
     public function me()
     {
-        $user = auth()->user();
+        $user = auth()->user()->load('location', 'departments');
 
         return ApiResponse::success('User profile', (object) [
             'id'                    => $user->id,
@@ -44,6 +44,10 @@ class AuthController extends Controller
             'force_password_change' => $user->force_password_change,
             'roles'                 => $user->getRoleNames()->toArray(),
             'permissions'           => $user->getAllPermissions()->pluck('name')->toArray(),
+            'location'              => $user->location ? ['id' => $user->location->id, 'name' => $user->location->name] : null,
+            'departments'           => $user->departments->map(fn($d) => ['id' => $d->id, 'name' => $d->name])->values(),
+            'created_at'            => $user->created_at,
+            'updated_at'            => $user->updated_at,
         ]);
     }
 

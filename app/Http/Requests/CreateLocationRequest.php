@@ -17,8 +17,10 @@ class CreateLocationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:100|unique:locations,name',
-            'address' => 'required|string',
+            'name'            => 'required|string|max:100|unique:locations,name',
+            'branding_title'  => 'nullable|string|max:150',
+            'address'         => 'required|string',
+            'logo'            => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048',
         ];
     }
 
