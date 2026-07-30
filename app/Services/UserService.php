@@ -169,7 +169,21 @@ class UserService extends BaseService
                 }
             }
 
-            
+                // Assign departments if provided
+                if (!empty($data['departments']) && is_array($data['departments'])) {
+                    $departmentIds = Department::whereIn('name', $data['departments'])
+                        ->pluck('id')
+                        ->toArray();
+
+                    if (!empty($departmentIds)) {
+                        $user->departments()->sync($departmentIds);
+                    } else {
+                        Log::warning('No matching departments found', [
+                            'input_departments' => $data['departments'],
+                            'user_email' => $data['email'] ?? null,
+                        ]);
+                    }
+                }
 
                 $createdUsers[] = $user;
             }
