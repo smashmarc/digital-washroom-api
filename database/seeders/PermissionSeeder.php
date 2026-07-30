@@ -14,6 +14,8 @@ class PermissionSeeder extends Seeder
         PermissionConstant::USER_VIEW   => 'View user profiles and the user list',
         PermissionConstant::USER_UPDATE => 'Edit and update user details',
         PermissionConstant::USER_DELETE => 'Delete user accounts',
+        PermissionConstant::USER_ACTIVATE   => 'Activate deactivated user accounts',
+        PermissionConstant::USER_DEACTIVATE => 'Deactivate user accounts',
 
         // Roles
         PermissionConstant::ROLE_CREATE => 'Create new roles',

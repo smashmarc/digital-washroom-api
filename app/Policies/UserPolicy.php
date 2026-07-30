@@ -46,4 +46,23 @@ class UserPolicy
         }
         return $user->hasPermissionTo(PermissionConstant::USER_DELETE);
     }
+
+    public function activate(User $user, User $model): bool
+    {
+        if ($model->hasRole(RoleConstant::ADMINISTRATOR)) {
+            return false;
+        }
+        return $user->hasPermissionTo(PermissionConstant::USER_ACTIVATE);
+    }
+
+    public function deactivate(User $user, User $model): bool
+    {
+        if ($user->id === $model->id) {
+            return false;
+        }
+        if ($model->hasRole(RoleConstant::ADMINISTRATOR)) {
+            return false;
+        }
+        return $user->hasPermissionTo(PermissionConstant::USER_DEACTIVATE);
+    }
 }

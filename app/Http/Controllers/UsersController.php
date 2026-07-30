@@ -40,7 +40,7 @@ class UsersController extends Controller
     public function index(Request $request): JsonResponse
     {
         Gate::authorize('view', User::class);
-        $params = $request->only(['search', 'sort_by', 'sort_dir', 'per_page', 'with', 'columns', 'exact', 'department_id']);
+        $params = $request->only(['search', 'sort_by', 'sort_dir', 'per_page', 'with', 'columns', 'exact', 'department_id', 'status']);
         $users = $this->userService->searchPaginatedList($params);
         return ApiResponse::success('Users fetched successfully.', $users, 200, UserResource::class);
     }
@@ -87,6 +87,26 @@ class UsersController extends Controller
         Gate::authorize('delete', $user);
         $user->delete();
         return ApiResponse::success('User deleted successfully.', null, 200);
+    }
+
+    public function updateStatus(Request $request, User $user): JsonResponse
+    {
+        $validated = $request->validate(['is_active' => ['required', 'boolean']]);
+
+        if ($validated['is_active']) {
+            Gate::authorize('activate', $user);
+        } else {
+            if ($user->id === auth()->id()) {
+                return ApiResponse::error('You cannot deactivate your own account.', 403);
+            }
+            Gate::authorize('deactivate', $user);
+        }
+
+        $updatedUser = $this->userService->update($validated, $user);
+        return ApiResponse::success(
+            $validated['is_active'] ? 'User activated successfully.' : 'User deactivated successfully.',
+            new UserResource($updatedUser)
+        );
     }
 
     public function upload(UploadUserRequest $request): JsonResponse

@@ -26,7 +26,18 @@ class AuthController extends Controller
             );
         }
 
-        return $this->respondWithToken($token, 'Login successful', auth()->user());
+        $user = auth()->user();
+        if (!$user->is_active) {
+            auth()->logout();
+            return ApiResponse::error(
+                'Your account has been deactivated. Please contact an administrator.',
+                403,
+                null,
+                'ACCOUNT_DEACTIVATED'
+            );
+        }
+
+        return $this->respondWithToken($token, 'Login successful', $user);
     }
 
     /**

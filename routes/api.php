@@ -37,7 +37,7 @@ Route::get('/me', [AuthController::class, 'me']);
 Route::post('/dev/create-superadmin', [DevController::class, 'createSuperAdmin']);
 Route::get('rooms/qr-view/{room}', [RoomsController::class, 'qrView']);
 
-Route::middleware('auth:api')->group(function () {
+Route::middleware(['auth:api', 'active.user'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 
@@ -49,6 +49,7 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('users')->group(function () {
         Route::get('form-options', [UsersController::class, 'getFormOptions']);
         Route::post('upload', [UsersController::class, 'upload'])->name('users.upload');
+        Route::patch('{user}/status', [UsersController::class, 'updateStatus']);
     });
 
     Route::prefix('rooms')->group(function () {

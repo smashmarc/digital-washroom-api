@@ -10,6 +10,8 @@ class PermissionConstant
     public const USER_VIEW   = 'user.view';
     public const USER_UPDATE = 'user.update';
     public const USER_DELETE = 'user.delete';
+    public const USER_ACTIVATE   = 'user.activate';
+    public const USER_DEACTIVATE = 'user.deactivate';
 
     /**
      * Roles Module
@@ -148,6 +150,8 @@ class PermissionConstant
             self::USER_VIEW,
             self::USER_UPDATE,
             self::USER_DELETE,
+            self::USER_ACTIVATE,
+            self::USER_DEACTIVATE,
 
             // Roles
             self::ROLE_CREATE,
