@@ -10,8 +10,7 @@ class PermissionConstant
     public const USER_VIEW   = 'user.view';
     public const USER_UPDATE = 'user.update';
     public const USER_DELETE = 'user.delete';
-    public const USER_ACTIVATE   = 'user.activate';
-    public const USER_DEACTIVATE = 'user.deactivate';
+    public const USER_TOGGLE_STATUS = 'user.toggle-status';
 
     /**
      * Roles Module
@@ -150,8 +149,7 @@ class PermissionConstant
             self::USER_VIEW,
             self::USER_UPDATE,
             self::USER_DELETE,
-            self::USER_ACTIVATE,
-            self::USER_DEACTIVATE,
+            self::USER_TOGGLE_STATUS,
 
             // Roles
             self::ROLE_CREATE,

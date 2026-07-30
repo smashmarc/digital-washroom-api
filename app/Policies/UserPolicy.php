@@ -47,22 +47,14 @@ class UserPolicy
         return $user->hasPermissionTo(PermissionConstant::USER_DELETE);
     }
 
-    public function activate(User $user, User $model): bool
+    public function toggleStatus(User $user, ?User $model = null): bool
     {
-        if ($model->hasRole(RoleConstant::ADMINISTRATOR)) {
+        if ($model && $user->id === $model->id) {
             return false;
         }
-        return $user->hasPermissionTo(PermissionConstant::USER_ACTIVATE);
-    }
-
-    public function deactivate(User $user, User $model): bool
-    {
-        if ($user->id === $model->id) {
+        if ($model?->hasRole(RoleConstant::ADMINISTRATOR)) {
             return false;
         }
-        if ($model->hasRole(RoleConstant::ADMINISTRATOR)) {
-            return false;
-        }
-        return $user->hasPermissionTo(PermissionConstant::USER_DEACTIVATE);
+        return $user->hasPermissionTo(PermissionConstant::USER_TOGGLE_STATUS);
     }
 }

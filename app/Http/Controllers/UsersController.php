@@ -41,6 +41,11 @@ class UsersController extends Controller
     {
         Gate::authorize('view', User::class);
         $params = $request->only(['search', 'sort_by', 'sort_dir', 'per_page', 'with', 'columns', 'exact', 'department_id', 'status']);
+
+        if (($params['status'] ?? 'active') === 'inactive') {
+            Gate::authorize('toggleStatus', User::class);
+        }
+
         $users = $this->userService->searchPaginatedList($params);
         return ApiResponse::success('Users fetched successfully.', $users, 200, UserResource::class);
     }
@@ -93,14 +98,10 @@ class UsersController extends Controller
     {
         $validated = $request->validate(['is_active' => ['required', 'boolean']]);
 
-        if ($validated['is_active']) {
-            Gate::authorize('activate', $user);
-        } else {
-            if ($user->id === auth()->id()) {
-                return ApiResponse::error('You cannot deactivate your own account.', 403);
-            }
-            Gate::authorize('deactivate', $user);
+        if (!$validated['is_active'] && $user->id === auth()->id()) {
+            return ApiResponse::error('You cannot deactivate your own account.', 403);
         }
+        Gate::authorize('toggleStatus', $user);
 
         $updatedUser = $this->userService->update($validated, $user);
         return ApiResponse::success(
