@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Announcement;
 use App\Models\Backup;
 use App\Models\Evaluation;
 use App\Models\EvaluationTemplate;
@@ -16,6 +17,7 @@ use App\Models\UserAssignment;
 use App\Models\Location;
 use App\Models\Permission;
 use App\Models\Report;
+use App\Policies\AnnouncementPolicy;
 use App\Policies\BackupPolicy;
 use App\Policies\EvaluationPolicy;
 use App\Policies\EvaluationTemplatePolicy;
@@ -64,5 +66,6 @@ class AppServiceProvider extends ServiceProvider
          Gate::policy(Evaluation::class, EvaluationPolicy::class);
          Gate::policy(UserAssignment::class, UserAssignmentPolicy::class);
          Gate::policy(Department::class, DepartmentPolicy::class);
+         Gate::policy(Announcement::class, AnnouncementPolicy::class);
     }
 }

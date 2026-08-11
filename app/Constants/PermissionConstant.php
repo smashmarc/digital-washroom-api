@@ -139,6 +139,14 @@ class PermissionConstant
     public const HOME_VIEW_KPI = 'home.view-kpi';
 
     /**
+     * Announcement Module
+     */
+    public const ANNOUNCEMENT_CREATE = 'announcement.create';
+    public const ANNOUNCEMENT_VIEW   = 'announcement.view';
+    public const ANNOUNCEMENT_UPDATE = 'announcement.update';
+    public const ANNOUNCEMENT_DELETE = 'announcement.delete';
+
+    /**
      * Return all permissions
      */
     public static function all(): array
@@ -242,6 +250,12 @@ class PermissionConstant
 
             // Home / Dashboard
             self::HOME_VIEW_KPI,
+
+            // Announcements
+            self::ANNOUNCEMENT_CREATE,
+            self::ANNOUNCEMENT_VIEW,
+            self::ANNOUNCEMENT_UPDATE,
+            self::ANNOUNCEMENT_DELETE,
         ];
     }
 }

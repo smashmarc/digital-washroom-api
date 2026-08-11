@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BackupDestinationController;
@@ -92,6 +93,16 @@ Route::middleware(['auth:api', 'active.user'])->group(function () {
         Route::patch('destinations/{destination}',      [BackupDestinationController::class, 'update']);
         Route::delete('destinations/{destination}',      [BackupDestinationController::class, 'destroy']);
         Route::post('destinations/{destination}/send', [BackupDestinationController::class, 'send']);
+    });
+
+    // ── Announcements ──────────────────────────────────────────────────
+    Route::prefix('announcements')->group(function () {
+        Route::get('form-options', [AnnouncementController::class, 'getFormOptions']);
+        Route::get('/',            [AnnouncementController::class, 'index']);
+        Route::post('/',           [AnnouncementController::class, 'store']);
+        Route::get('{announcement}',    [AnnouncementController::class, 'show']);
+        Route::put('{announcement}',    [AnnouncementController::class, 'update']);
+        Route::delete('{announcement}', [AnnouncementController::class, 'destroy']);
     });
 
     //=========//

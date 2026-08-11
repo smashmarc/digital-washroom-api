@@ -107,6 +107,12 @@ class PermissionSeeder extends Seeder
 
         // Home / Dashboard
         PermissionConstant::HOME_VIEW_KPI => 'View KPI tiles on the home dashboard',
+
+        // Announcements
+        PermissionConstant::ANNOUNCEMENT_CREATE => 'Create new announcements',
+        PermissionConstant::ANNOUNCEMENT_VIEW   => 'View announcements on the dashboard',
+        PermissionConstant::ANNOUNCEMENT_UPDATE => 'Edit announcement details and targeting',
+        PermissionConstant::ANNOUNCEMENT_DELETE => 'Delete announcements',
     ];
 
     public function run(): void
