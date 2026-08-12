@@ -153,6 +153,7 @@ Route::middleware(['auth:api', 'active.user'])->group(function () {
     // ── Evaluations ──────────────────────────────────────────────────────
     Route::prefix('evaluations')->group(function () {
         Route::get('form-options',   [EvaluationController::class, 'getFormOptions']);
+        Route::get('users-without-evaluation', [EvaluationController::class, 'usersWithoutEvaluation']);
         Route::post('create-submit', [EvaluationController::class, 'storeAndSubmit']);
         Route::get('/',              [EvaluationController::class, 'index']);
         Route::post('/',             [EvaluationController::class, 'store']);

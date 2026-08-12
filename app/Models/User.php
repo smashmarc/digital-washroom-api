@@ -85,6 +85,11 @@ class User extends  Authenticatable implements JWTSubject
         return $this->hasMany(Log::class);
     }
 
+    public function evaluations()
+    {
+        return $this->hasMany(Evaluation::class, 'user_id');
+    }
+
     public function location():BelongsTo
     {
         return $this->belongsTo(Location::class);
