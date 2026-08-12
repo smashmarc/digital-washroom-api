@@ -23,6 +23,11 @@ class AnnouncementPolicy
         return $user->hasPermissionTo(PermissionConstant::ANNOUNCEMENT_VIEW);
     }
 
+    public function viewOnDashboard(User $user): bool
+    {
+        return $user->hasPermissionTo(PermissionConstant::HOME_VIEW_ANNOUNCEMENTS);
+    }
+
     public function create(User $user): bool
     {
         return $user->hasPermissionTo(PermissionConstant::ANNOUNCEMENT_CREATE);

@@ -137,6 +137,7 @@ class PermissionConstant
      * Home / Dashboard
      */
     public const HOME_VIEW_KPI = 'home.view-kpi';
+    public const HOME_VIEW_ANNOUNCEMENTS = 'home.view-announcements';
 
     /**
      * Announcement Module
@@ -250,6 +251,7 @@ class PermissionConstant
 
             // Home / Dashboard
             self::HOME_VIEW_KPI,
+            self::HOME_VIEW_ANNOUNCEMENTS,
 
             // Announcements
             self::ANNOUNCEMENT_CREATE,

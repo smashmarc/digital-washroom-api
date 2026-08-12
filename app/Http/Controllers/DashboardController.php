@@ -62,7 +62,7 @@ class DashboardController extends Controller
 
         $logsPerUser = [];
 
-        $announcements = Gate::allows('view', Announcement::class)
+        $announcements = Gate::allows('viewOnDashboard', Announcement::class)
             ? $this->announcementService->getActiveForUser($request->user())
             : collect();
 

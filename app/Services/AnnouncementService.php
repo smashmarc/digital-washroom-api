@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Constants\Role as RoleConstant;
 use App\Models\Announcement;
 use App\Models\Department;
 use App\Models\Location;
@@ -97,6 +98,8 @@ class AnnouncementService extends BaseService
 
     public function getActiveForUser(User $user)
     {
+        $isAdmin = $user->hasRole(RoleConstant::ADMINISTRATOR);
+
         return Announcement::where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
@@ -104,15 +107,17 @@ class AnnouncementService extends BaseService
             ->where(function ($q) {
                 $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
             })
-            ->where(function ($q) use ($user) {
-                $q->where(function ($none) {
-                    $none->whereDoesntHave('roles')
-                        ->whereDoesntHave('locations')
-                        ->whereDoesntHave('departments');
-                })
-                ->orWhereHas('roles', fn ($r) => $r->whereIn('roles.id', $user->roles->pluck('id')))
-                ->orWhereHas('locations', fn ($l) => $l->where('locations.id', $user->location_id))
-                ->orWhereHas('departments', fn ($d) => $d->whereIn('departments.id', $user->departments->pluck('id')));
+            ->when(!$isAdmin, function ($query) use ($user) {
+                $query->where(function ($q) use ($user) {
+                    $q->where(function ($none) {
+                        $none->whereDoesntHave('roles')
+                            ->whereDoesntHave('locations')
+                            ->whereDoesntHave('departments');
+                    })
+                    ->orWhereHas('roles', fn ($r) => $r->whereIn('roles.id', $user->roles->pluck('id')))
+                    ->orWhereHas('locations', fn ($l) => $l->where('locations.id', $user->location_id))
+                    ->orWhereHas('departments', fn ($d) => $d->whereIn('departments.id', $user->departments->pluck('id')));
+                });
             })
             ->orderByDesc('created_at')
             ->get();
