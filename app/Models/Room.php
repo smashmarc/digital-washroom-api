@@ -15,6 +15,7 @@ class Room extends Model
         'location_id',
         'name',
         'qr_code',
+        'records_to_show',
     ];
 
     public function location()
@@ -58,7 +59,7 @@ class Room extends Model
         return $this->hasMany(Log::class)
         ->where('note_code', '!=', 0)
         ->orderByDesc('id')
-        ->limit(3);
+        ->limit($this->records_to_show ?: 3);
     }
 
     

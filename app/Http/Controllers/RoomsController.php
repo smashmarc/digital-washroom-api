@@ -68,7 +68,9 @@ class RoomsController extends Controller
     /** Public action — no authorization required. */
     public function qrView(Room $room): JsonResponse
     {
-        $room->load(['location', 'lastCleanedLog']);
+        $room->load('location');
+        // Built off the actual $room instance (not eager-loaded) so records_to_show is respected.
+        $room->setRelation('lastCleanedLog', $room->lastCleanedLog()->get());
         return ApiResponse::success('Room fetched successfully.', new RoomResource($room));
     }
 
