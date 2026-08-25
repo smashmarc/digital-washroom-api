@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateEvaluationRequest;
 use App\Http\Resources\EvaluationAnswerResource;
 use App\Http\Resources\EvaluationFormOptionsResource;
 use App\Http\Resources\EvaluationResource;
+use App\Http\Resources\UserResource;
 use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
 use App\Services\EvaluationService;
@@ -33,9 +34,17 @@ class EvaluationController extends Controller
             Gate::authorize('viewAny', Evaluation::class);
         }
 
-        $params = $request->only(['search', 'sort_by', 'sort_dir', 'per_page', 'with', 'user_id', 'date_from', 'date_to']);
+        $params = $request->only(['search', 'sort_by', 'sort_dir', 'per_page', 'with', 'user_id', 'department_id', 'location_id', 'date_from', 'date_to']);
         $evaluations = $this->evaluationService->searchPaginatedList($params);
         return ApiResponse::success('Evaluations fetched successfully.', $evaluations, 200, EvaluationResource::class);
+    }
+
+    public function usersWithoutEvaluation(Request $request): JsonResponse
+    {
+        Gate::authorize('viewAny', Evaluation::class);
+        $params = $request->only(['search', 'department_id', 'location_id', 'date_from', 'date_to', 'per_page']);
+        $users = $this->evaluationService->usersWithoutEvaluation($params);
+        return ApiResponse::success('Users without evaluation fetched successfully.', $users, 200, UserResource::class);
     }
 
     public function store(CreateEvaluationRequest $request): JsonResponse

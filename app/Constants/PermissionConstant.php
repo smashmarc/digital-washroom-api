@@ -10,6 +10,7 @@ class PermissionConstant
     public const USER_VIEW   = 'user.view';
     public const USER_UPDATE = 'user.update';
     public const USER_DELETE = 'user.delete';
+    public const USER_TOGGLE_STATUS = 'user.toggle-status';
 
     /**
      * Roles Module
@@ -136,6 +137,15 @@ class PermissionConstant
      * Home / Dashboard
      */
     public const HOME_VIEW_KPI = 'home.view-kpi';
+    public const HOME_VIEW_ANNOUNCEMENTS = 'home.view-announcements';
+
+    /**
+     * Announcement Module
+     */
+    public const ANNOUNCEMENT_CREATE = 'announcement.create';
+    public const ANNOUNCEMENT_VIEW   = 'announcement.view';
+    public const ANNOUNCEMENT_UPDATE = 'announcement.update';
+    public const ANNOUNCEMENT_DELETE = 'announcement.delete';
 
     /**
      * Return all permissions
@@ -148,6 +158,7 @@ class PermissionConstant
             self::USER_VIEW,
             self::USER_UPDATE,
             self::USER_DELETE,
+            self::USER_TOGGLE_STATUS,
 
             // Roles
             self::ROLE_CREATE,
@@ -240,6 +251,13 @@ class PermissionConstant
 
             // Home / Dashboard
             self::HOME_VIEW_KPI,
+            self::HOME_VIEW_ANNOUNCEMENTS,
+
+            // Announcements
+            self::ANNOUNCEMENT_CREATE,
+            self::ANNOUNCEMENT_VIEW,
+            self::ANNOUNCEMENT_UPDATE,
+            self::ANNOUNCEMENT_DELETE,
         ];
     }
 }

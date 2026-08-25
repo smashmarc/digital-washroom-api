@@ -8,6 +8,7 @@ use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
 use App\Models\EvaluationTemplate;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -31,15 +32,23 @@ class EvaluationService extends BaseService
             $query->where('user_id', (int) $params['user_id']);
         }
 
+        if (!empty($params['department_id'])) {
+            $query->where('department_id', (int) $params['department_id']);
+        }
+
+        if (!empty($params['location_id'])) {
+            $query->where('location_id', (int) $params['location_id']);
+        }
+
         if (!empty($params['with']) && is_array($params['with'])) {
             $query->with($params['with']);
         }
 
         if (!empty($params['date_from'])) {
-            $query->whereDate('submitted_at', '>=', $params['date_from']);
+            $query->where('submitted_at', '>=', Carbon::parse($params['date_from'])->utc());
         }
         if (!empty($params['date_to'])) {
-            $query->whereDate('submitted_at', '<=', $params['date_to']);
+            $query->where('submitted_at', '<=', Carbon::parse($params['date_to'])->utc());
         }
 
         if (!empty($params['search'])) {
@@ -55,6 +64,42 @@ class EvaluationService extends BaseService
 
         return $query->orderBy($params['sort_by'] ?? 'id', $sortDir)
                      ->paginate(max(1, (int) ($params['per_page'] ?? 10)));
+    }
+
+    public function usersWithoutEvaluation(array $params = [])
+    {
+        $query = User::where('is_active', true);
+
+        if (!empty($params['department_id'])) {
+            $deptId = (int) $params['department_id'];
+            $query->whereHas('departments', fn ($q) => $q->where('departments.id', $deptId));
+        }
+
+        if (!empty($params['location_id'])) {
+            $query->where('location_id', (int) $params['location_id']);
+        }
+
+        if (!empty($params['search'])) {
+            $search = trim($params['search']);
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $query->whereDoesntHave('evaluations', function ($q) use ($params) {
+            $q->whereNotNull('submitted_at');
+            // if (!empty($params['department_id'])) {
+            //     $q->where('department_id', (int) $params['department_id']);
+            // }
+            if (!empty($params['date_from'])) {
+                $q->where('submitted_at', '>=', Carbon::parse($params['date_from'])->utc());
+            }
+            if (!empty($params['date_to'])) {
+                $q->where('submitted_at', '<=', Carbon::parse($params['date_to'])->utc());
+            }
+        });
+
+        return $query->with(['departments', 'location'])
+            ->orderBy('name')
+            ->paginate(max(1, (int) ($params['per_page'] ?? 25)));
     }
 
     public function create(array $data): Evaluation

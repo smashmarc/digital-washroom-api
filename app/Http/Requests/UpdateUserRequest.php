@@ -43,6 +43,7 @@ class UpdateUserRequest extends FormRequest
             ],
             'departments'   => ['nullable', 'array'],
             'departments.*' => ['integer', 'exists:departments,id'],
+            'is_active'     => ['sometimes', 'boolean'],
         ];
     }
 

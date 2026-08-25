@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BackupDestinationController;
@@ -37,7 +38,7 @@ Route::get('/me', [AuthController::class, 'me']);
 Route::post('/dev/create-superadmin', [DevController::class, 'createSuperAdmin']);
 Route::get('rooms/qr-view/{room}', [RoomsController::class, 'qrView']);
 
-Route::middleware('auth:api')->group(function () {
+Route::middleware(['auth:api', 'active.user'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 
@@ -49,6 +50,7 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('users')->group(function () {
         Route::get('form-options', [UsersController::class, 'getFormOptions']);
         Route::post('upload', [UsersController::class, 'upload'])->name('users.upload');
+        Route::patch('{user}/status', [UsersController::class, 'updateStatus']);
     });
 
     Route::prefix('rooms')->group(function () {
@@ -91,6 +93,16 @@ Route::middleware('auth:api')->group(function () {
         Route::patch('destinations/{destination}',      [BackupDestinationController::class, 'update']);
         Route::delete('destinations/{destination}',      [BackupDestinationController::class, 'destroy']);
         Route::post('destinations/{destination}/send', [BackupDestinationController::class, 'send']);
+    });
+
+    // ── Announcements ──────────────────────────────────────────────────
+    Route::prefix('announcements')->group(function () {
+        Route::get('form-options', [AnnouncementController::class, 'getFormOptions']);
+        Route::get('/',            [AnnouncementController::class, 'index']);
+        Route::post('/',           [AnnouncementController::class, 'store']);
+        Route::get('{announcement}',    [AnnouncementController::class, 'show']);
+        Route::put('{announcement}',    [AnnouncementController::class, 'update']);
+        Route::delete('{announcement}', [AnnouncementController::class, 'destroy']);
     });
 
     //=========//
@@ -141,6 +153,7 @@ Route::middleware('auth:api')->group(function () {
     // ── Evaluations ──────────────────────────────────────────────────────
     Route::prefix('evaluations')->group(function () {
         Route::get('form-options',   [EvaluationController::class, 'getFormOptions']);
+        Route::get('users-without-evaluation', [EvaluationController::class, 'usersWithoutEvaluation']);
         Route::post('create-submit', [EvaluationController::class, 'storeAndSubmit']);
         Route::get('/',              [EvaluationController::class, 'index']);
         Route::post('/',             [EvaluationController::class, 'store']);

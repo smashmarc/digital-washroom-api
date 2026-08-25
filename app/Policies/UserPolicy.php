@@ -46,4 +46,15 @@ class UserPolicy
         }
         return $user->hasPermissionTo(PermissionConstant::USER_DELETE);
     }
+
+    public function toggleStatus(User $user, ?User $model = null): bool
+    {
+        if ($model && $user->id === $model->id) {
+            return false;
+        }
+        if ($model?->hasRole(RoleConstant::ADMINISTRATOR)) {
+            return false;
+        }
+        return $user->hasPermissionTo(PermissionConstant::USER_TOGGLE_STATUS);
+    }
 }

@@ -27,6 +27,8 @@ class User extends  Authenticatable implements JWTSubject
         'password',
         'location_id',
         'username',
+        'is_active',
+        'deactivated_at',
     ];
 
     /**
@@ -49,6 +51,8 @@ class User extends  Authenticatable implements JWTSubject
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
+            'deactivated_at' => 'datetime',
         ];
     }
 
@@ -79,6 +83,11 @@ class User extends  Authenticatable implements JWTSubject
     public function logs()
     {
         return $this->hasMany(Log::class);
+    }
+
+    public function evaluations()
+    {
+        return $this->hasMany(Evaluation::class, 'user_id');
     }
 
     public function location():BelongsTo

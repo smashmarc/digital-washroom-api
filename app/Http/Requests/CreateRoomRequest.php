@@ -26,6 +26,7 @@ class CreateRoomRequest extends FormRequest
                 Rule::unique('rooms')
                     ->where(fn ($query) => $query->where('location_id', $this->location_id)),
             ],
+            'records_to_show' => ['nullable', 'integer', 'min:1'],
         ];
     }
 
@@ -37,6 +38,8 @@ class CreateRoomRequest extends FormRequest
             'name.required' => 'Please enter a room name.',
             'location_id.required' => 'Please select a location.',
             'location_id.exists' => 'The selected location does not exist.',
+            'records_to_show.integer' => 'Records to show must be a number.',
+            'records_to_show.min' => 'Records to show must be at least 1.',
         ];
     }
 }

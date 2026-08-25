@@ -2,19 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Announcement;
 use App\Models\Log;
 use App\Models\Room;
 use App\Models\User;
 use App\Models\Location;
 use App\Helpers\ApiResponse;
+use App\Http\Resources\AnnouncementResource;
 use App\Http\Resources\DashboardResource;
 use App\Http\Resources\RoomResource;
+use App\Services\AnnouncementService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
 {
+    public function __construct(protected AnnouncementService $announcementService) {}
+
     public function index(Request $request)
     {
         $dateFrom = Carbon::parse($request->query('date_from'))->utc();
@@ -56,6 +61,10 @@ class DashboardController extends Controller
             ->first(['id', 'name', 'username']);
 
         $logsPerUser = [];
+
+        $announcements = Gate::allows('viewOnDashboard', Announcement::class)
+            ? $this->announcementService->getActiveForUser($request->user())
+            : collect();
 
         // $cleaningTrend = Log::query()
         //     ->selectRaw('DATE(logged_at) as date, COUNT(*) as total')
@@ -120,7 +129,8 @@ class DashboardController extends Controller
                 // 'user_activity_trend' => $userActivityTrend,
                 // 'top_users_this_month' => $topUsersThisMonth,
                 // 'latest_user_actions' => $latestUserActions,
-            ]
+            ],
+            'announcements' => $announcements,
         ];
 
         return ApiResponse::success(

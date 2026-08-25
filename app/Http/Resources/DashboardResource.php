@@ -9,6 +9,7 @@ class DashboardResource extends JsonResource
     public function toArray($request)
     {
         return [
+            'announcements' => AnnouncementResource::collection($this['announcements']),
             'operations' => [
                 'locations_count' => $this['operations']['locations_count'],
                 'rooms_count' => $this['operations']['rooms_count'],

@@ -36,6 +36,12 @@ class UserService extends BaseService
             $query->whereHas('departments', fn($q) => $q->where('departments.id', (int) $params['department_id']));
         }
 
+        if (($params['status'] ?? 'active') === 'inactive') {
+            $query->where('is_active', false);
+        } elseif (($params['status'] ?? 'active') === 'active') {
+            $query->where('is_active', true);
+        }
+
         if (!empty($params['search'])) {
             $search = trim($params['search']);
             $query->where(function ($q) use ($search) {
@@ -102,7 +108,12 @@ class UserService extends BaseService
         DB::beginTransaction();
 
         try {
-            // Update user fields          
+            // Track when a user transitions active <-> inactive
+            if (array_key_exists('is_active', $data) && (bool) $data['is_active'] !== (bool) $user->is_active) {
+                $data['deactivated_at'] = $data['is_active'] ? null : now();
+            }
+
+            // Update user fields
             $user->update($data);
             if (isset($data['roles'])) {
                 $user->syncRoles($data['roles']);
@@ -169,7 +180,21 @@ class UserService extends BaseService
                 }
             }
 
-            
+                // Assign departments if provided
+                if (!empty($data['departments']) && is_array($data['departments'])) {
+                    $departmentIds = Department::whereIn('name', $data['departments'])
+                        ->pluck('id')
+                        ->toArray();
+
+                    if (!empty($departmentIds)) {
+                        $user->departments()->sync($departmentIds);
+                    } else {
+                        Log::warning('No matching departments found', [
+                            'input_departments' => $data['departments'],
+                            'user_email' => $data['email'] ?? null,
+                        ]);
+                    }
+                }
 
                 $createdUsers[] = $user;
             }

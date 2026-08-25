@@ -28,6 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // default unauthenticated-redirect behavior would throw its own
         // RouteNotFoundException. Force a plain JSON 401 instead.
         Authenticate::redirectUsing(fn () => null);
+
+        $middleware->alias([
+            'active.user' => \App\Http\Middleware\EnsureUserIsActive::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (ValidationException $e) {

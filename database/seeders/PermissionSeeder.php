@@ -14,6 +14,7 @@ class PermissionSeeder extends Seeder
         PermissionConstant::USER_VIEW   => 'View user profiles and the user list',
         PermissionConstant::USER_UPDATE => 'Edit and update user details',
         PermissionConstant::USER_DELETE => 'Delete user accounts',
+        PermissionConstant::USER_TOGGLE_STATUS => 'Activate or deactivate user accounts',
 
         // Roles
         PermissionConstant::ROLE_CREATE => 'Create new roles',
@@ -106,6 +107,13 @@ class PermissionSeeder extends Seeder
 
         // Home / Dashboard
         PermissionConstant::HOME_VIEW_KPI => 'View KPI tiles on the home dashboard',
+        PermissionConstant::HOME_VIEW_ANNOUNCEMENTS => 'View the announcements widget on the home dashboard',
+
+        // Announcements
+        PermissionConstant::ANNOUNCEMENT_CREATE => 'Create new announcements',
+        PermissionConstant::ANNOUNCEMENT_VIEW   => 'View and manage announcements',
+        PermissionConstant::ANNOUNCEMENT_UPDATE => 'Edit announcement details and targeting',
+        PermissionConstant::ANNOUNCEMENT_DELETE => 'Delete announcements',
     ];
 
     public function run(): void

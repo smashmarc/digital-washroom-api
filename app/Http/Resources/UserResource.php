@@ -19,6 +19,8 @@ class UserResource extends JsonResource
             'roles' => RoleResource::collection($this->whenLoaded('roles')),
             'location_id'=> $this->location_id,
             'username'=>$this->username,
+            'is_active' => (bool) $this->is_active,
+            'deactivated_at' => $this->deactivated_at,
             'location' => new LocationResource($this->whenLoaded('location')),
             'departments' => DepartmentResource::collection($this->whenLoaded('departments')),
         ];
