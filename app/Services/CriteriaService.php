@@ -17,7 +17,7 @@ class CriteriaService extends BaseService
 
     public function searchPaginatedList(array $params = [])
     {
-        $params['searchableColumns'] = ['text', 'category.name'];
+        $params['searchableColumns'] = ['text', 'description', 'category.name'];
         return parent::list($params);
     }
 
@@ -28,6 +28,7 @@ class CriteriaService extends BaseService
             $criteria = Criteria::create([
                 'criteria_category_id' => $data['criteria_category_id'],
                 'text'                 => $data['text'],
+                'description'          => $data['description'] ?? null,
                 'is_active'            => $data['is_active'] ?? true,
             ]);
 
@@ -50,6 +51,7 @@ class CriteriaService extends BaseService
         try {
             $criteria->criteria_category_id = $data['criteria_category_id'] ?? $criteria->criteria_category_id;
             $criteria->text                 = $data['text'];
+            $criteria->description          = $data['description'] ?? null;
             $criteria->is_active            = $data['is_active'] ?? $criteria->is_active;
             $criteria->save();
 
