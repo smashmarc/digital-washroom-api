@@ -69,6 +69,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Display Timezone
+    |--------------------------------------------------------------------------
+    |
+    | Timestamps are always stored in UTC (see above). This is the timezone used
+    | to render them for humans — CSV exports and anything else generated server
+    | side — when the client does not tell us its own timezone.
+    |
+    */
+
+    'display_timezone' => env('APP_DISPLAY_TIMEZONE', env('APP_TIMEZONE', 'UTC')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |
