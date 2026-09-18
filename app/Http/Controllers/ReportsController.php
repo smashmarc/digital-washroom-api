@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ApiResponse;
 use App\Services\ReportService;
-use Illuminate\Support\Carbon;
+use App\Traits\FormatsExportTimestamps;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\Report;
@@ -13,6 +13,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportsController extends Controller
 {
+    use FormatsExportTimestamps;
+
     protected ReportService $reportService;
 
     public function __construct(ReportService $reportService)
@@ -164,28 +166,5 @@ class ReportsController extends Controller
         }, $filename, [
             'Content-Type' => 'text/csv',
         ]);
-    }
-
-    /**
-     * Timestamps are stored and serialized as UTC. The browser renders them in the
-     * viewer's local timezone, so the CSV has to do the same or the two disagree.
-     * The client sends its IANA zone as `tz`; fall back to the configured default.
-     */
-    private function resolveTimezone(?string $tz): string
-    {
-        if ($tz && in_array($tz, \DateTimeZone::listIdentifiers(), true)) {
-            return $tz;
-        }
-
-        return config('app.display_timezone') ?: config('app.timezone');
-    }
-
-    private function localDateTime($value, string $tz, string $format = 'Y-m-d h:i A'): string
-    {
-        if (empty($value)) {
-            return '—';
-        }
-
-        return Carbon::parse($value, 'UTC')->setTimezone($tz)->format($format);
     }
 }

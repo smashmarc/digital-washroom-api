@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use App\Http\Resources\LogResource;
 use App\Http\Controllers\Controller;
+use App\Traits\FormatsExportTimestamps;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\CreateLogRequest;
 use App\Http\Requests\UpdateLogRequest;
@@ -17,6 +18,8 @@ use App\Http\Requests\UpdateLogRequest;
 
 class LogsController extends Controller
 {
+    use FormatsExportTimestamps;
+
     protected $logService;
     public function __construct(LogService $logService)
     {
@@ -93,11 +96,12 @@ class LogsController extends Controller
 
         $params = $request->only(['search', 'date_from', 'date_to', 'sort_dir']);
         $logs   = $this->logService->exportAll($params);
+        $tz     = $this->resolveTimezone($request->input('tz'));
 
         $statusMap = [0 => 'Not Cleaned', 1 => 'Partially Cleaned', 2 => 'Fully Cleaned'];
-        $filename  = 'logs_' . now()->format('Y-m-d') . '.csv';
+        $filename  = 'logs_' . now($tz)->format('Y-m-d') . '.csv';
 
-        return response()->streamDownload(function () use ($logs, $statusMap) {
+        return response()->streamDownload(function () use ($logs, $statusMap, $tz) {
             $handle = fopen('php://output', 'w');
             fputcsv($handle, ['Location', 'Room', 'User', 'Status', 'Note', 'Logged At']);
             foreach ($logs as $log) {
@@ -107,7 +111,7 @@ class LogsController extends Controller
                     $log->user?->name            ?? '—',
                     $statusMap[$log->note_code]  ?? 'Unknown',
                     $log->note                   ?? '',
-                    $log->logged_at              ?? '',
+                    $this->localDateTime($log->logged_at, $tz),
                 ]);
             }
             fclose($handle);
