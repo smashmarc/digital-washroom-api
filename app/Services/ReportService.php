@@ -7,6 +7,7 @@ use App\Models\Log as LogModel;
 use App\Models\Room;
 use App\Models\User;
 use App\Models\Location;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class ReportService
@@ -21,6 +22,23 @@ class ReportService
         if (!empty($params['date_to'])) {
             $query->whereDate($column, '<=', $params['date_to']);
         }
+    }
+
+    /**
+     * MAX()/aggregate datetime aliases come back as bare "Y-m-d H:i:s" strings with no
+     * timezone marker, so clients parse them as local time instead of UTC. Re-emit them
+     * as ISO-8601 UTC, matching how Eloquent serializes real datetime columns.
+     */
+    private function normalizeDates($paginator, array $fields)
+    {
+        return $paginator->through(function ($row) use ($fields) {
+            foreach ($fields as $field) {
+                if (!empty($row->{$field})) {
+                    $row->{$field} = Carbon::parse($row->{$field}, 'UTC')->toISOString();
+                }
+            }
+            return $row;
+        });
     }
 
     // ── 1. Cleaning Activity ─────────────────────────────────────────
@@ -139,8 +157,10 @@ class ReportService
             $query->where('users.id', $params['user_id']);
         }
 
-        return $query->orderByDesc('total_logs')
-                     ->paginate($params['per_page'] ?? 25);
+        return $this->normalizeDates(
+            $query->orderByDesc('total_logs')->paginate($params['per_page'] ?? 25),
+            ['last_active']
+        );
     }
 
     public function userPerformanceExport(array $params = [])
@@ -266,9 +286,12 @@ class ReportService
             $query->where('location_id', $params['location_id']);
         }
 
-        return $query->orderBy('rooms.location_id')
-                     ->orderBy('rooms.name')
-                     ->paginate($params['per_page'] ?? 25);
+        return $this->normalizeDates(
+            $query->orderBy('rooms.location_id')
+                  ->orderBy('rooms.name')
+                  ->paginate($params['per_page'] ?? 25),
+            ['last_cleaned']
+        );
     }
 
     public function locationDetailExport(array $params = [])
@@ -304,8 +327,10 @@ class ReportService
             $query->where('users.id', (int) $params['user_id']);
         }
 
-        return $query->orderByDesc('total_evaluations')
-                     ->paginate($params['per_page'] ?? 25);
+        return $this->normalizeDates(
+            $query->orderByDesc('total_evaluations')->paginate($params['per_page'] ?? 25),
+            ['last_evaluated']
+        );
     }
 
     // ── 6. QA — Template Analysis ───────────────────────────────────
@@ -361,8 +386,10 @@ class ReportService
             $query->where('users.id', (int) $params['user_id']);
         }
 
-        return $query->orderByDesc('total_conducted')
-                     ->paginate($params['per_page'] ?? 25);
+        return $this->normalizeDates(
+            $query->orderByDesc('total_conducted')->paginate($params['per_page'] ?? 25),
+            ['last_conducted']
+        );
     }
 
     // ── 8. QA — Location Summary ────────────────────────────────────

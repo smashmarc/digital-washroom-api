@@ -10,6 +10,7 @@ class CriteriaResource extends JsonResource
             'criteria_category_id' => $this->criteria_category_id,
             'category'            => new CriteriaCategoryResource($this->whenLoaded('category')),
             'text'                => $this->text,
+            'description'         => $this->description,
             'is_active'           => $this->is_active,
             'template_ids'        => $this->whenLoaded('evaluationTemplates', fn() => $this->evaluationTemplates->pluck('id')),
             'pivot'               => $this->when(

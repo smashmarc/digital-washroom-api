@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ApiResponse;
 use App\Services\ReportService;
+use App\Traits\FormatsExportTimestamps;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\Report;
@@ -12,6 +13,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportsController extends Controller
 {
+    use FormatsExportTimestamps;
+
     protected ReportService $reportService;
 
     public function __construct(ReportService $reportService)
@@ -60,6 +63,7 @@ class ReportsController extends Controller
         ]);
 
         $type = $params['type'] ?? '';
+        $tz   = $this->resolveTimezone($request->input('tz'));
 
         $rows = match($type) {
             'cleaning_activity'       => $this->reportService->cleaningActivityExport($params),
@@ -79,7 +83,7 @@ class ReportsController extends Controller
             abort(422, 'Invalid report type.');
         }
 
-        $filename = "{$type}_" . now()->format('Y-m-d') . ".csv";
+        $filename = "{$type}_" . now($tz)->format('Y-m-d') . ".csv";
         $headers  = match($type) {
             'cleaning_activity'       => ['Date', 'Location', 'Room', 'User', 'Status', 'Note'],
             'room_status'             => ['Location', 'Room', 'Last Cleaned', 'Last User', 'Status'],
@@ -95,7 +99,7 @@ class ReportsController extends Controller
 
         $statusMap = [0 => 'Not Cleaned', 1 => 'Partially Cleaned', 2 => 'Fully Cleaned'];
 
-        return response()->streamDownload(function () use ($rows, $headers, $type, $statusMap) {
+        return response()->streamDownload(function () use ($rows, $headers, $type, $statusMap, $tz) {
             $handle = fopen('php://output', 'w');
             fputcsv($handle, $headers);
 
@@ -103,7 +107,7 @@ class ReportsController extends Controller
                 $r = is_array($row) ? (object) $row : $row;
                 fputcsv($handle, match($type) {
                     'cleaning_activity' => [
-                        $row->logged_at,
+                        $this->localDateTime($row->logged_at, $tz),
                         $row->room?->location?->name,
                         $row->room?->name,
                         $row->user?->name,
@@ -113,13 +117,14 @@ class ReportsController extends Controller
                     'room_status' => [
                         $row->location?->name,
                         $row->name,
-                        $row->logs->first()?->logged_at,
+                        $this->localDateTime($row->logs->first()?->logged_at, $tz),
                         $row->logs->first()?->user?->name,
                         $statusMap[$row->logs->first()?->note_code] ?? '—',
                     ],
                     'user_performance' => [
                         $row->name, $row->total_logs, $row->fully_cleaned,
-                        $row->partially_cleaned, $row->not_cleaned, $row->last_active,
+                        $row->partially_cleaned, $row->not_cleaned,
+                        $this->localDateTime($row->last_active, $tz),
                     ],
                     'location_summary' => [
                         $row->name, $row->total_rooms, $row->total_logs,
@@ -128,11 +133,12 @@ class ReportsController extends Controller
                     'location_detail' => [
                         $row->location?->name, $row->name, $row->total_logs,
                         $row->fully_cleaned, $row->partially_cleaned, $row->not_cleaned,
-                        $row->last_cleaned,
+                        $this->localDateTime($row->last_cleaned, $tz),
                     ],
                     'qa_employee_performance' => [
                         $r->name, $r->total_evaluations, $r->avg_score ?? '—',
-                        $r->passed, $r->failed, $r->inconclusive, $r->last_evaluated ?? '—',
+                        $r->passed, $r->failed, $r->inconclusive,
+                        $this->localDateTime($r->last_evaluated, $tz, 'Y-m-d'),
                     ],
                     'qa_template_analysis' => [
                         $r->name, $r->total_evaluations, $r->avg_score ?? '—',
@@ -140,7 +146,8 @@ class ReportsController extends Controller
                     ],
                     'qa_evaluator_activity' => [
                         $r->name, $r->total_conducted, $r->avg_score ?? '—',
-                        $r->passed, $r->failed, $r->inconclusive, $r->last_conducted ?? '—',
+                        $r->passed, $r->failed, $r->inconclusive,
+                        $this->localDateTime($r->last_conducted, $tz, 'Y-m-d'),
                     ],
                     'qa_location_summary' => [
                         $r->name, $r->total, $r->avg_score ?? '—',

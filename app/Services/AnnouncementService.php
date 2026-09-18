@@ -108,15 +108,22 @@ class AnnouncementService extends BaseService
                 $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
             })
             ->when(!$isAdmin, function ($query) use ($user) {
-                $query->where(function ($q) use ($user) {
-                    $q->where(function ($none) {
-                        $none->whereDoesntHave('roles')
-                            ->whereDoesntHave('locations')
-                            ->whereDoesntHave('departments');
-                    })
-                    ->orWhereHas('roles', fn ($r) => $r->whereIn('roles.id', $user->roles->pluck('id')))
-                    ->orWhereHas('locations', fn ($l) => $l->where('locations.id', $user->location_id))
-                    ->orWhereHas('departments', fn ($d) => $d->whereIn('departments.id', $user->departments->pluck('id')));
+                $roleIds       = $user->roles->pluck('id');
+                $departmentIds = $user->departments->pluck('id');
+
+                // Each dimension narrows independently: an empty dimension places no
+                // restriction, a populated one must be matched by the user.
+                $query->where(function ($q) use ($roleIds) {
+                    $q->whereDoesntHave('roles')
+                        ->orWhereHas('roles', fn ($r) => $r->whereIn('roles.id', $roleIds));
+                })
+                ->where(function ($q) use ($user) {
+                    $q->whereDoesntHave('locations')
+                        ->orWhereHas('locations', fn ($l) => $l->where('locations.id', $user->location_id));
+                })
+                ->where(function ($q) use ($departmentIds) {
+                    $q->whereDoesntHave('departments')
+                        ->orWhereHas('departments', fn ($d) => $d->whereIn('departments.id', $departmentIds));
                 });
             })
             ->orderByDesc('created_at')

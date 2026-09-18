@@ -13,6 +13,7 @@ class Criteria extends Model
     protected $fillable = [
         'criteria_category_id',
         'text',
+        'description',
         'is_active',
     ];
 
